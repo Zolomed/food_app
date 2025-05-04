@@ -2,6 +2,15 @@ import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/food_selection_screen.dart';
+import 'screens/payment_screen.dart';
+import 'screens/reset_password_screen.dart';
+import 'screens/add_address_screen.dart';
+//TODO сделать общую тему для всего
+//TODO реализовать переходы
+//TODO реализовать BottomNavigationBar
+//TODO как то убрать кучу импортов
+//TODO сделать динамическое отображение информации, чтоб кнопки не убегали
 
 void main() {
   runApp(MyApp());
@@ -26,48 +35,9 @@ class MyApp extends StatelessWidget {
         '/add_address': (context) => AddAddressScreen(),
         '/payment': (context) => PaymentScreen(),
         '/reset_password': (context) => ResetPasswordScreen(),
-        '/verification_code': (context) => VerificationCodeScreen(),
+        '/verification_code': (context) =>
+            VerificationCodeScreen(), //TODO сделать VerificationCodeScreen
       },
-    );
-  }
-}
-
-class FoodSelectionScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Выбор еды')),
-      body: Center(child: Text('Экран выбора еды')),
-    );
-  }
-}
-
-class AddAddressScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Добавить адрес')),
-      body: Center(child: Text('Экран добавления адреса')),
-    );
-  }
-}
-
-class PaymentScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Оплата')),
-      body: Center(child: Text('Экран оплаты')),
-    );
-  }
-}
-
-class ResetPasswordScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Сброс пароля')),
-      body: Center(child: Text('Экран сброса пароля')),
     );
   }
 }

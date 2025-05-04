@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
+//TODO сделать чтоб при нажатии кнопки назад, нельзя было вернуться на этот экран
+//TODO сделать отображение пароля при нажатии на глазик
+//TODO изменить поля для ввода в базу данных и отображение информации не через поля, а через текст
+//TODO реализовать правильные переходы
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -10,7 +14,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController phoneController =
+      TextEditingController(text: '+7');
   final _formKey = GlobalKey<FormState>();
   String? errorMessage;
 
@@ -35,6 +40,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset:
+          true, // Позволяет экрану адаптироваться к клавиатуре
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -45,7 +52,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           },
         ),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),
         child: Form(
           key: _formKey,
@@ -100,9 +107,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: phoneController,
                 keyboardType: TextInputType.phone,
                 inputFormatters: [
-                  PhoneInputFormatter(
-                    defaultCountryCode: 'RU', // Устанавливаем формат для России
-                  ),
+                  PhoneInputFormatter(),
                 ],
                 decoration: InputDecoration(
                   labelText: 'Телефон',

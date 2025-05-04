@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
+//TODO сделать сохранение информации в бд
+//TODO сделать отображение пароля при нажатии на глазик
+//TODO реализовать правильные переходы
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -9,67 +12,58 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController nameController =
       TextEditingController(text: 'Иван');
-  final TextEditingController emailController =
-      TextEditingController(text: 'primer@gmail.com');
   final TextEditingController phoneController =
       TextEditingController(); // Изначально пустой
+  final TextEditingController emailController =
+      TextEditingController(text: ''); // Почта необязательна
   bool isEditing = false;
 
   void toggleEditing() {
     setState(() {
+      if (!isEditing) {
+        if (phoneController.text.trim().isEmpty) {
+          phoneController.text = '+7 ';
+        }
+      } else {
+        if (phoneController.text.trim() == '+7') {
+          phoneController.clear();
+        }
+      }
       isEditing = !isEditing;
     });
   }
 
   void saveProfile() {
-    // Проверяем, что все поля заполнены
     if (nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Пожалуйста, введите ваше имя и фамилию')),
+        SnackBar(content: Text('Пожалуйста, введите ваше имя')),
       );
       return;
     }
 
-    if (emailController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Пожалуйста, введите ваш email')),
-      );
-      return;
-    }
-
-    if (phoneController.text.trim().isEmpty) {
+    if (phoneController.text.trim().isEmpty ||
+        phoneController.text.trim() == '+7') {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Пожалуйста, введите ваш номер телефона')),
       );
       return;
     }
 
-    // Получаем введенный номер телефона
     String phone = phoneController.text.trim();
-
-    // Убираем все лишние символы, кроме цифр
     phone = toNumericString(phone);
 
-    // Проверяем, что номер телефона не пустой
-    if (phone.isNotEmpty) {
-      // Если номер не начинается с 7, добавляем код страны
-      if (!phone.startsWith('7')) {
-        phone = '7$phone';
-      }
-
-      // Форматируем номер обратно с префиксом +7 и пробелами
-      phoneController.text =
-          '+7 (${phone.substring(1, 4)}) ${phone.substring(4, 7)}-${phone.substring(7, 9)}-${phone.substring(9)}';
-    } else {
-      // Если номер пустой, оставляем поле пустым
-      phoneController.text = '';
+    if (phone.length != 11 || !phone.startsWith('7')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Введите корректный номер телефона')),
+      );
+      return;
     }
 
-    // Здесь можно добавить логику сохранения данных (например, отправка на сервер)
     print('Сохранено:');
     print('Имя: ${nameController.text}');
-    print('Email: ${emailController.text}');
-    print('Телефон: ${phone.isNotEmpty ? int.tryParse(phone) : 'Не указан'}');
+    print('Телефон: $phone');
+    print(
+        'Email: ${emailController.text.isNotEmpty ? emailController.text : 'Не указан'}');
 
     setState(() {
       isEditing = false;
@@ -85,9 +79,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         isEditing = false;
       });
-      return false; // Остаемся на текущей странице
+      return false;
     }
-    return true; // Возвращаемся на предыдущую страницу
+    return true;
   }
 
   @override
@@ -95,6 +89,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
+        resizeToAvoidBottomInset:
+            true, // Позволяет экрану адаптироваться к клавиатуре
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -119,7 +115,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
           ],
         ),
-        body: Padding(
+        body: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,24 +174,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 controller: nameController,
                 readOnly: !isEditing,
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-              SizedBox(height: 20),
-              Text(
-                'E-mail',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 5),
-              TextField(
-                controller: emailController,
-                readOnly: !isEditing,
-                decoration: InputDecoration(
+                  labelText: 'Введите ваше имя',
+                  labelStyle: TextStyle(color: Colors.grey),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -215,15 +195,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 readOnly: !isEditing,
                 keyboardType: TextInputType.phone,
                 inputFormatters: [
-                  PhoneInputFormatter(
-                    defaultCountryCode: 'RU', // Устанавливаем формат для России
-                  ),
+                  PhoneInputFormatter(),
                 ],
                 decoration: InputDecoration(
+                  labelText: 'Введите номер телефона',
+                  labelStyle: TextStyle(color: Colors.grey),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                   hintText: '+7 (___) ___-__-__',
+                  hintStyle: TextStyle(color: Colors.grey),
+                ),
+              ),
+              SizedBox(height: 20),
+              Text(
+                'E-mail (необязательно)',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 5),
+              TextField(
+                controller: emailController,
+                readOnly: !isEditing,
+                decoration: InputDecoration(
+                  labelText: 'Введите ваш email',
+                  labelStyle: TextStyle(color: Colors.grey),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
               SizedBox(height: 20),

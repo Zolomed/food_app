@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+//TODO сделать возможность входа по телефону и emil
+//TODO убрать кнопку назад, и сделать при переходе так, что назад вернутся нельзя
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -30,17 +32,14 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset:
+          true, // Позволяет экрану адаптироваться к клавиатуре
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+        automaticallyImplyLeading: false, // Убираем кнопку "Назад"
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),
         child: Form(
           key: _formKey,
@@ -58,18 +57,14 @@ class _LoginScreenState extends State<LoginScreen> {
               TextFormField(
                 controller: emailController,
                 decoration: InputDecoration(
-                  labelText: 'E-mail',
+                  labelText: 'E-mail или телефон',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Введите email';
-                  }
-                  final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-                  if (!emailRegex.hasMatch(value)) {
-                    return 'Введите корректный email';
+                    return 'Введите email или телефон';
                   }
                   return null;
                 },

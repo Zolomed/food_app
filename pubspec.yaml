@@ -21,4 +21,7 @@ dev_dependencies:
 flutter:
   assets:
     - assets/images/avatar_placeholder.png
+    - assets/images/greek_salad.jpg
+    - assets/images/hawaiian_chicken.jpg
+    - assets/images/margherita_pizza.jpg
   uses-material-design: true
