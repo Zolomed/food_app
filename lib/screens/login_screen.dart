@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-//TODO сделать возможность входа по телефону и emil
-//TODO убрать кнопку назад, и сделать при переходе так, что назад вернутся нельзя
+
+//TODO сделать возможность входа по телефону и emil?
+//TODO отображение пароля по глазику
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -17,6 +18,8 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       // Если форма валидна, выполняем вход
       setState(() {
+        Navigator.pushReplacementNamed(
+            context, '/restaurants'); // Переход на экран входа
         errorMessage = null; // Сбрасываем сообщение об ошибке
       });
       print('Email: ${emailController.text}');
@@ -111,6 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: 20),
               Center(
                 child: ElevatedButton(
+                  //TODO реализовать вход через бд
                   onPressed: _login,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange,

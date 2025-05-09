@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
+
 //TODO сделать сохранение информации в бд
-//TODO сделать отображение пароля при нажатии на глазик
-//TODO реализовать правильные переходы
+//TODO реализовать отдельный экран изменения данных
+//TODO изменить поля для ввода в базу данных и отображение информации не через поля, а через текст
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -84,6 +85,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return true;
   }
 
+  void _logout() {
+    Navigator.pushReplacementNamed(context, '/'); // Переход на экран входа
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -94,14 +99,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () async {
-              if (await _onWillPop()) {
-                Navigator.pop(context);
-              }
-            },
-          ),
+          automaticallyImplyLeading:
+              false, // Убираем стандартную кнопку "Назад"
+          leading: !isEditing
+              ? IconButton(
+                  icon: Icon(Icons.logout, color: Colors.black),
+                  onPressed: _logout, // Выход из аккаунта
+                )
+              : null,
           title: Text(
             'Профиль',
             style: TextStyle(color: Colors.black),

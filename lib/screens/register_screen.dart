@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
+
 //TODO сделать чтоб при нажатии кнопки назад, нельзя было вернуться на этот экран
 //TODO сделать отображение пароля при нажатии на глазик
-//TODO изменить поля для ввода в базу данных и отображение информации не через поля, а через текст
-//TODO реализовать правильные переходы
+//TODO сделать проверку на русски в пароле
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -12,10 +12,10 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController nameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
   final TextEditingController phoneController =
       TextEditingController(text: '+7');
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   String? errorMessage;
 
@@ -26,9 +26,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         errorMessage = null; // Сбрасываем сообщение об ошибке
       });
       print('Name: ${nameController.text}');
-      print('Email: ${emailController.text}');
-      print('Password: ${passwordController.text}');
       print('Phone: ${phoneController.text}');
+      print('Password: ${passwordController.text}');
+      print(
+          'Email: ${emailController.text.isNotEmpty ? emailController.text : 'Не указан'}');
       // Здесь можно добавить логику для отправки данных на сервер
     } else {
       setState(() {
@@ -84,26 +85,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               SizedBox(height: 20),
               TextFormField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  labelText: 'E-mail',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Введите email';
-                  }
-                  final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-                  if (!emailRegex.hasMatch(value)) {
-                    return 'Введите корректный email';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20),
-              TextFormField(
                 controller: phoneController,
                 keyboardType: TextInputType.phone,
                 inputFormatters: [
@@ -149,6 +130,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   return null;
                 },
               ),
+              SizedBox(height: 20),
+              TextFormField(
+                controller: emailController,
+                decoration: InputDecoration(
+                  labelText: 'E-mail (необязательно)',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                validator: (value) {
+                  if (value != null && value.isNotEmpty) {
+                    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                    if (!emailRegex.hasMatch(value)) {
+                      return 'Введите корректный email';
+                    }
+                  }
+                  return null;
+                },
+              ),
               SizedBox(height: 10),
               if (errorMessage != null)
                 Text(
@@ -170,21 +170,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: Text(
                     'Регистрация',
                     style: TextStyle(fontSize: 18),
-                  ),
-                ),
-              ),
-              SizedBox(height: 20),
-              Center(
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.pushNamed(context, '/');
-                  },
-                  child: Text(
-                    'Уже есть аккаунт? Войти',
-                    style: TextStyle(
-                      color: Colors.orange,
-                      fontWeight: FontWeight.bold,
-                    ),
                   ),
                 ),
               ),

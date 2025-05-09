@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 //TODO сделать запись в бд
 //TODO переименовать в корзину
 //TODO сделать возможность поменять адрес
@@ -45,12 +46,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+        automaticallyImplyLeading: false, // Убираем кнопку "Назад"
         title: Text(
           'Корзина',
           style: TextStyle(color: Colors.black),

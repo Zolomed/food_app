@@ -1,0 +1,61 @@
+import 'package:flutter/material.dart';
+
+//TODO сделать бд
+
+class RestaurantScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final Map<String, dynamic> restaurant =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          restaurant['name'],
+          style: TextStyle(color: Colors.black),
+        ),
+        centerTitle: true,
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Image.asset(
+            restaurant['image'],
+            width: double.infinity,
+            height: 200,
+            fit: BoxFit.cover,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Text(
+              restaurant['description'],
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          ),
+          Expanded(
+            child: Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/food_selection');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 100, vertical: 15),
+                ),
+                child: Text(
+                  'Выбрать еду',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
