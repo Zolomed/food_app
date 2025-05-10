@@ -14,6 +14,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   String? errorMessage;
+  bool _isPasswordVisible = false; // Состояние для управления видимостью пароля
 
   void _login() async {
     if (_formKey.currentState!.validate()) {
@@ -103,13 +104,25 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: 20),
               TextFormField(
                 controller: passwordController,
-                obscureText: true,
+                obscureText: !_isPasswordVisible, // Управляем видимостью пароля
                 decoration: InputDecoration(
                   labelText: 'Пароль',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  suffixIcon: Icon(Icons.visibility),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible =
+                            !_isPasswordVisible; // Переключаем состояние
+                      });
+                    },
+                  ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {

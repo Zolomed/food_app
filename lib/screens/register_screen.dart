@@ -2,8 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 
-//TODO сделать отображение пароля при нажатии на глазик
 //TODO сделать проверку на русский в пароле
+//TODO сделать запись в бд
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -18,6 +18,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   String? errorMessage;
+  bool _isPasswordVisible = false;
 
   void _register() async {
     if (_formKey.currentState!.validate()) {
@@ -156,14 +157,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
               SizedBox(height: 20),
               TextFormField(
                 controller: passwordController,
-                obscureText: true,
+                obscureText: !_isPasswordVisible,
                 decoration: InputDecoration(
-                  labelText: 'Пароль',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  suffixIcon: Icon(Icons.visibility),
-                ),
+                    labelText: 'Пароль',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;
+                        });
+                      },
+                    )),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Введите пароль';

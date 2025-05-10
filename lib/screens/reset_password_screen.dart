@@ -1,6 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
-//TODO реализовать правильные переходы
 
 class ResetPasswordScreen extends StatefulWidget {
   @override
@@ -11,14 +10,41 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final TextEditingController emailController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  void _resetPassword() {
+  void _resetPassword() async {
     if (_formKey.currentState!.validate()) {
-      // Логика отправки запроса на восстановление пароля
-      print('Email для восстановления: ${emailController.text}');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ссылка для восстановления отправлена!')),
-      );
-      Navigator.pop(context); // Возвращаемся на предыдущий экран
+      try {
+        // Отправляем запрос на сброс пароля
+        await FirebaseAuth.instance.sendPasswordResetEmail(
+          email: emailController.text.trim(),
+        );
+
+        // Показываем сообщение об успешной отправке
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Ссылка для сброса пароля отправлена на ${emailController.text}. Проверьте почту.',
+            ),
+          ),
+        );
+
+        // Возвращаемся на предыдущий экран
+        Navigator.pop(context);
+      } on FirebaseAuthException catch (e) {
+        // Обрабатываем ошибки Firebase
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Произошла ошибка: ${e.message}'),
+          ),
+        );
+      } catch (e) {
+        // Обрабатываем другие ошибки
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Произошла неизвестная ошибка.'),
+          ),
+        );
+        print(e);
+      }
     }
   }
 
@@ -85,8 +111,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 100, vertical: 15),
+                    padding: EdgeInsets.symmetric(horizontal: 70, vertical: 15),
                   ),
                   child: Text(
                     'Отправить новый пароль',
