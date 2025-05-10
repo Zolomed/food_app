@@ -1,9 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 
-//TODO сделать чтоб при нажатии кнопки назад, нельзя было вернуться на этот экран
 //TODO сделать отображение пароля при нажатии на глазик
-//TODO сделать проверку на русски в пароле
+//TODO сделать проверку на русский в пароле
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -12,25 +12,49 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController =
       TextEditingController(text: '+7');
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   String? errorMessage;
 
-  void _register() {
+  void _register() async {
     if (_formKey.currentState!.validate()) {
-      // Если форма валидна, выполняем регистрацию
-      setState(() {
-        errorMessage = null; // Сбрасываем сообщение об ошибке
-      });
-      print('Name: ${nameController.text}');
-      print('Phone: ${phoneController.text}');
-      print('Password: ${passwordController.text}');
-      print(
-          'Email: ${emailController.text.isNotEmpty ? emailController.text : 'Не указан'}');
-      // Здесь можно добавить логику для отправки данных на сервер
+      try {
+        // Выполняем регистрацию через Firebase
+        final credential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: emailController.text.trim(),
+          password: passwordController.text.trim(),
+        );
+
+        // Если регистрация успешна, перенаправляем на экран ресторанов
+        Navigator.pushReplacementNamed(context, '/restaurants');
+        print('User registered: ${credential.user?.uid}');
+        print('User registered: ${credential.user?.email}');
+      } on FirebaseAuthException catch (e) {
+        // Обрабатываем ошибки Firebase
+        if (e.code == 'weak-password') {
+          setState(() {
+            errorMessage = 'Пароль слишком слабый.';
+          });
+        } else if (e.code == 'email-already-in-use') {
+          setState(() {
+            errorMessage = 'Аккаунт с таким email уже существует.';
+          });
+        } else {
+          setState(() {
+            errorMessage = 'Произошла ошибка: ${e.message}';
+          });
+        }
+      } catch (e) {
+        // Обрабатываем другие ошибки
+        setState(() {
+          errorMessage = 'Произошла неизвестная ошибка.';
+        });
+        print(e);
+      }
     } else {
       setState(() {
         errorMessage = 'Пожалуйста, исправьте ошибки выше.';
@@ -85,6 +109,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               SizedBox(height: 20),
               TextFormField(
+                controller: emailController,
+                decoration: InputDecoration(
+                  labelText: 'E-mail',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Введите email';
+                  }
+                  final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                  if (!emailRegex.hasMatch(value)) {
+                    return 'Введите корректный email';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 20),
+              TextFormField(
                 controller: phoneController,
                 keyboardType: TextInputType.phone,
                 inputFormatters: [
@@ -127,24 +171,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   if (value.length < 6) {
                     return 'Пароль должен быть не менее 6 символов';
                   }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20),
-              TextFormField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  labelText: 'E-mail (необязательно)',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                validator: (value) {
-                  if (value != null && value.isNotEmpty) {
-                    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-                    if (!emailRegex.hasMatch(value)) {
-                      return 'Введите корректный email';
-                    }
+                  if (RegExp(r'[а-яА-ЯёЁ]').hasMatch(value)) {
+                    return 'Пароль не должен содержать русские буквы';
                   }
                   return null;
                 },

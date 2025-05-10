@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 
@@ -85,8 +86,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return true;
   }
 
-  void _logout() {
-    Navigator.pushReplacementNamed(context, '/'); // Переход на экран входа
+  Future<void> _logout() async {
+    try {
+      await FirebaseAuth.instance.signOut(); // Выход из аккаунта
+      Navigator.pushReplacementNamed(context, '/'); // Переход на экран входа
+    } catch (e) {
+      print('Ошибка при выходе: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка при выходе из аккаунта')),
+      );
+    }
   }
 
   @override

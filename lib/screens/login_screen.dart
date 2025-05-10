@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 //TODO сделать возможность входа по телефону и emil?
@@ -14,17 +15,41 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   String? errorMessage;
 
-  void _login() {
+  void _login() async {
     if (_formKey.currentState!.validate()) {
-      // Если форма валидна, выполняем вход
-      setState(() {
-        Navigator.pushReplacementNamed(
-            context, '/restaurants'); // Переход на экран входа
-        errorMessage = null; // Сбрасываем сообщение об ошибке
-      });
-      print('Email: ${emailController.text}');
-      print('Password: ${passwordController.text}');
-      // Здесь можно добавить логику для отправки данных на сервер
+      try {
+        // Выполняем вход через Firebase
+        final credential =
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: emailController.text.trim(),
+          password: passwordController.text.trim(),
+        );
+
+        // Если вход успешен, перенаправляем на экран ресторанов
+        Navigator.pushReplacementNamed(context, '/restaurants');
+        print('User logged in: ${credential.user?.email}');
+      } on FirebaseAuthException catch (e) {
+        // Обрабатываем ошибки Firebase
+        if (e.code == 'user-not-found') {
+          setState(() {
+            errorMessage = 'Пользователь с таким email не найден.';
+          });
+        } else if (e.code == 'wrong-password') {
+          setState(() {
+            errorMessage = 'Неверный пароль.';
+          });
+        } else {
+          setState(() {
+            errorMessage = 'Произошла ошибка: ${e.message}';
+          });
+        }
+      } catch (e) {
+        // Обрабатываем другие ошибки
+        setState(() {
+          errorMessage = 'Произошла неизвестная ошибка.';
+        });
+        print(e);
+      }
     } else {
       setState(() {
         errorMessage = 'Пожалуйста, исправьте ошибки выше.';
@@ -60,14 +85,17 @@ class _LoginScreenState extends State<LoginScreen> {
               TextFormField(
                 controller: emailController,
                 decoration: InputDecoration(
-                  labelText: 'E-mail или телефон',
+                  labelText: 'E-mail',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Введите email или телефон';
+                    return 'Введите email';
+                  }
+                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                    return 'Введите корректный email';
                   }
                   return null;
                 },
@@ -114,7 +142,6 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: 20),
               Center(
                 child: ElevatedButton(
-                  //TODO реализовать вход через бд
                   onPressed: _login,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange,
