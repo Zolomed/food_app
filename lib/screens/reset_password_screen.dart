@@ -111,7 +111,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 70, vertical: 15),
+                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                   ),
                   child: Text(
                     'Отправить новый пароль',

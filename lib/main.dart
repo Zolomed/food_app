@@ -13,6 +13,7 @@ import 'screens/main_screen.dart';
 //TODO как то убрать кучу импортов
 //TODO сделать динамическое отображение информации, чтоб кнопки не убегали
 //TODO сделать экран избранного для еды и ресторанов
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(

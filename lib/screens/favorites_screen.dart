@@ -11,6 +11,7 @@ class FavoritesScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        automaticallyImplyLeading: false,
         title: Text(
           'Избранное',
           style: TextStyle(color: Colors.black),

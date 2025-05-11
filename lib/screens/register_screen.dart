@@ -140,7 +140,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  hintText: '+7 (___) ___-__-__',
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
