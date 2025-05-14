@@ -2,9 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:food_app/models/app_user.dart';
 
 //TODO сделать проверку на русский в пароле
-//TODO сделать запись в бд
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -32,18 +32,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
           password: passwordController.text.trim(),
         );
 
-        // Запись данных пользователя в Firestore
-        await db.collection('users').doc(credential.user!.uid).set({
-          'name': nameController.text.trim(),
-          'email': emailController.text.trim(),
-          'phone': phoneController.text.trim(),
-          'createdAt': FieldValue.serverTimestamp(),
-        });
+        final user = AppUser(
+          uid: credential.user!.uid,
+          name: nameController.text.trim(),
+          email: emailController.text.toLowerCase().trim(),
+          phone: phoneController.text.trim(),
+        );
 
-        // Отправляем письмо для подтверждения email
+        await db.collection('users').doc(user.uid).set(user.toMap());
+
         await credential.user?.sendEmailVerification();
 
-        // Переходим на экран авторизации и показываем SnackBar
         Navigator.pushReplacementNamed(
           context,
           '/',
@@ -88,8 +87,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset:
-          true, // Позволяет экрану адаптироваться к клавиатуре
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
