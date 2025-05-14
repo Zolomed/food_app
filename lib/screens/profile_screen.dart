@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 
 //TODO сделать сохранение информации в бд
+//TODO сделать отмену редактирования данных
 //TODO реализовать отдельный экран изменения данных
 //TODO изменить поля для ввода в базу данных и отображение информации не через поля, а через текст
 

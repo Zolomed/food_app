@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.orange,
         scaffoldBackgroundColor: Colors.white,
       ),
-      initialRoute: '/',
+      initialRoute: '/restaurants',
       routes: {
         '/': (context) => LoginScreen(),
         '/register': (context) => RegisterScreen(),

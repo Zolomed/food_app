@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 //TODO сделать проверку на русский в пароле
 //TODO сделать запись в бд
@@ -21,21 +22,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isPasswordVisible = false;
 
   void _register() async {
+    final db = FirebaseFirestore.instance;
+
     if (_formKey.currentState!.validate()) {
       try {
-        // Выполняем регистрацию через Firebase
         final credential =
             await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: emailController.text.trim(),
           password: passwordController.text.trim(),
         );
 
-        // Если регистрация успешна, перенаправляем на экран ресторанов
-        Navigator.pushReplacementNamed(context, '/restaurants');
-        print('User registered: ${credential.user?.uid}');
-        print('User registered: ${credential.user?.email}');
+        // Запись данных пользователя в Firestore
+        await db.collection('users').doc(credential.user!.uid).set({
+          'name': nameController.text.trim(),
+          'email': emailController.text.trim(),
+          'phone': phoneController.text.trim(),
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
+        // Отправляем письмо для подтверждения email
+        await credential.user?.sendEmailVerification();
+
+        // Переходим на экран авторизации и показываем SnackBar
+        Navigator.pushReplacementNamed(
+          context,
+          '/',
+          arguments: {'email': emailController.text.trim()},
+        );
+        Future.delayed(Duration(milliseconds: 300), () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Письмо для подтверждения отправлено на ${credential.user?.email}. Подтвердите email и войдите.',
+              ),
+            ),
+          );
+        });
       } on FirebaseAuthException catch (e) {
-        // Обрабатываем ошибки Firebase
         if (e.code == 'weak-password') {
           setState(() {
             errorMessage = 'Пароль слишком слабый.';
@@ -50,7 +73,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           });
         }
       } catch (e) {
-        // Обрабатываем другие ошибки
         setState(() {
           errorMessage = 'Произошла неизвестная ошибка.';
         });

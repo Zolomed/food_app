@@ -16,17 +16,34 @@ class _LoginScreenState extends State<LoginScreen> {
   String? errorMessage;
   bool _isPasswordVisible = false; // Состояние для управления видимостью пароля
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is Map && args['email'] != null) {
+      emailController.text = args['email'];
+    }
+  }
+
   void _login() async {
     if (_formKey.currentState!.validate()) {
       try {
-        // Выполняем вход через Firebase
         final credential =
             await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: emailController.text.trim(),
           password: passwordController.text.trim(),
         );
 
-        // Если вход успешен, перенаправляем на экран ресторанов
+        // Проверяем, подтвержден ли email
+        if (credential.user != null && !credential.user!.emailVerified) {
+          await FirebaseAuth.instance.signOut();
+          setState(() {
+            errorMessage = 'Пожалуйста, подтвердите ваш email перед входом.';
+          });
+          return;
+        }
+
+        // Если вход успешен и email подтвержден, перенаправляем на экран ресторанов
         Navigator.pushReplacementNamed(context, '/restaurants');
         print('User logged in: ${credential.user?.email}');
       } on FirebaseAuthException catch (e) {
