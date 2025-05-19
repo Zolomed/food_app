@@ -81,7 +81,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       userData!.photoUrl!.isNotEmpty
                                   ? NetworkImage(userData!.photoUrl!)
                                   : AssetImage(
-                                          'assets/images/avatar_placeholder.png')
+                                          'assets/images/avatar_placeholder.jpg')
                                       as ImageProvider,
                             ),
                             SizedBox(height: 10),

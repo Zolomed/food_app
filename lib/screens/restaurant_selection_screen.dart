@@ -1,57 +1,22 @@
 import 'package:flutter/material.dart';
-
-//TODO сделать бд
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/restaurant.dart';
+import '../models/menu_item.dart';
 
 class RestaurantSelectionScreen extends StatelessWidget {
-  final List<Map<String, dynamic>> restaurants = [
-    {
-      'name': 'Ресторан Гурман',
-      'description': 'Лучшие блюда европейской кухни',
-      'image': 'assets/images/restaurant_1.jpg',
-      'menu': [
-        {'name': 'Стейк', 'price': 1200, 'image': 'assets/images/steak.jpg'},
-        {
-          'name': 'Салат Цезарь',
-          'price': 450,
-          'image': 'assets/images/caesar.jpg'
-        },
-      ],
-    },
-    {
-      'name': 'Суши Мастер',
-      'description': 'Свежие суши и роллы',
-      'image': 'assets/images/restaurant_2.jpg',
-      'menu': [
-        {
-          'name': 'Ролл Филадельфия',
-          'price': 600,
-          'image': 'assets/images/philadelphia.jpg'
-        },
-        {
-          'name': 'Суши с лососем',
-          'price': 300,
-          'image': 'assets/images/salmon_sushi.jpg'
-        },
-      ],
-    },
-    {
-      'name': 'Пицца Хаус',
-      'description': 'Итальянская пицца на любой вкус',
-      'image': 'assets/images/restaurant_3.jpg',
-      'menu': [
-        {
-          'name': 'Пицца Маргарита',
-          'price': 700,
-          'image': 'assets/images/margherita.jpg'
-        },
-        {
-          'name': 'Пицца Пепперони',
-          'price': 800,
-          'image': 'assets/images/pepperoni.jpg'
-        },
-      ],
-    },
-  ];
+  Future<List<Restaurant>> fetchRestaurants() async {
+    final restaurantsSnapshot =
+        await FirebaseFirestore.instance.collection('restaurants').get();
+    List<Restaurant> restaurants = [];
+    for (var doc in restaurantsSnapshot.docs) {
+      final menuSnapshot = await doc.reference.collection('menu').get();
+      final menu = menuSnapshot.docs
+          .map((item) => MenuItem.fromMap(item.id, item.data()))
+          .toList();
+      restaurants.add(Restaurant.fromMap(doc.id, doc.data(), menu));
+    }
+    return restaurants;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,84 +31,104 @@ class RestaurantSelectionScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-        itemCount: restaurants.length,
-        itemBuilder: (context, index) {
-          final restaurant = restaurants[index];
-          return Card(
-            margin: EdgeInsets.symmetric(vertical: 10),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              children: [
-                Row(
+      body: FutureBuilder<List<Restaurant>>(
+        future: fetchRestaurants(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(child: Text('Нет доступных ресторанов'));
+          }
+          final restaurants = snapshot.data!;
+          return ListView.builder(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            itemCount: restaurants.length,
+            itemBuilder: (context, index) {
+              final restaurant = restaurants[index];
+              return Card(
+                margin: EdgeInsets.symmetric(vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.asset(
-                        restaurant['image'],
-                        width: 100,
-                        height: 100,
-                        fit: BoxFit.cover,
-                      ),
+                    Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: restaurant.image.startsWith('http')
+                              ? Image.network(
+                                  restaurant.image,
+                                  width: 100,
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                )
+                              : Image.asset(
+                                  restaurant.image,
+                                  width: 100,
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                ),
+                        ),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                restaurant.name,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 5),
+                              Text(
+                                restaurant.description,
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            restaurant['name'],
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pushNamed(
+                              context,
+                              '/restaurant',
+                              arguments: restaurant,
+                            );
+                          },
+                          child: Text(
+                            'Подробнее',
+                            style: TextStyle(color: Colors.orange),
                           ),
-                          SizedBox(height: 5),
-                          Text(
-                            restaurant['description'],
-                            style: TextStyle(color: Colors.grey),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pushNamed(
+                              context,
+                              '/food_selection',
+                              arguments: restaurant.menu,
+                            );
+                          },
+                          child: Text(
+                            'Посмотреть меню',
+                            style: TextStyle(color: Colors.orange),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(
-                          context,
-                          '/restaurant',
-                          arguments: restaurant,
-                        );
-                      },
-                      child: Text(
-                        'Подробнее',
-                        style: TextStyle(color: Colors.orange),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(
-                          context,
-                          '/food_selection',
-                          arguments: restaurant['menu'],
-                        );
-                      },
-                      child: Text(
-                        'Посмотреть меню',
-                        style: TextStyle(color: Colors.orange),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              );
+            },
           );
         },
       ),

@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
-
-//TODO сделать бд
+import '../models/restaurant.dart';
 
 class RestaurantScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final Map<String, dynamic> restaurant =
-        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final Restaurant restaurant =
+        ModalRoute.of(context)!.settings.arguments as Restaurant;
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          restaurant['name'],
+          restaurant.name,
           style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
@@ -21,16 +20,23 @@ class RestaurantScreen extends StatelessWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Image.asset(
-            restaurant['image'],
-            width: double.infinity,
-            height: 200,
-            fit: BoxFit.cover,
-          ),
+          restaurant.image.startsWith('http')
+              ? Image.network(
+                  restaurant.image,
+                  width: double.infinity,
+                  height: 200,
+                  fit: BoxFit.cover,
+                )
+              : Image.asset(
+                  restaurant.image,
+                  width: double.infinity,
+                  height: 200,
+                  fit: BoxFit.cover,
+                ),
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: Text(
-              restaurant['description'],
+              restaurant.description,
               style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
           ),
@@ -38,7 +44,11 @@ class RestaurantScreen extends StatelessWidget {
             child: Center(
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pushNamed(context, '/food_selection');
+                  Navigator.pushNamed(
+                    context,
+                    '/food_selection',
+                    arguments: restaurant.menu, // Передаем меню ресторана
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.orange,

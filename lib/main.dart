@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:food_app/screens/admin_add_restaurant_screen.dart';
 import 'package:food_app/screens/edit_profile_screen.dart';
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
@@ -47,6 +48,7 @@ class MyApp extends StatelessWidget {
         '/payment': (context) => MainScreen(initialIndex: 1),
         '/profile': (context) => MainScreen(initialIndex: 2),
         '/edit_profile': (context) => EditProfileScreen(),
+        '/admin': (context) => AdminAddRestaurantScreen(),
       },
     );
   }

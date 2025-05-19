@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/menu_item.dart';
 
 //TODO Сделать сортировку блюд
 //TODO сделать избранное
@@ -11,13 +12,12 @@ class FoodSelectionScreen extends StatefulWidget {
 }
 
 class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
-  final Set<Map<String, dynamic>> _favoriteItems = {}; // Хранит избранные блюда
+  final Set<MenuItem> _favoriteItems = {}; // Хранит избранные блюда
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> menu = ModalRoute.of(context)!
-        .settings
-        .arguments as List<Map<String, dynamic>>;
+    final List<MenuItem> menu =
+        ModalRoute.of(context)!.settings.arguments as List<MenuItem>;
 
     return Scaffold(
       appBar: AppBar(
@@ -34,8 +34,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
         itemCount: menu.length,
         itemBuilder: (context, index) {
           final item = menu[index];
-          final isFavorite =
-              _favoriteItems.contains(item); // Проверяем, в избранном ли блюдо
+          final isFavorite = _favoriteItems.contains(item);
 
           return Card(
             margin: EdgeInsets.symmetric(vertical: 10),
@@ -46,12 +45,19 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: Image.asset(
-                    item['image'],
-                    width: 100,
-                    height: 100,
-                    fit: BoxFit.cover,
-                  ),
+                  child: item.image.startsWith('http')
+                      ? Image.network(
+                          item.image,
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.cover,
+                        )
+                      : Image.asset(
+                          item.image,
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.cover,
+                        ),
                 ),
                 SizedBox(width: 10),
                 Expanded(
@@ -59,7 +65,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        item['name'],
+                        item.name,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -67,7 +73,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                       ),
                       SizedBox(height: 5),
                       Text(
-                        '${item['price']} р.',
+                        '${item.price} р.',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -85,9 +91,9 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                   onPressed: () {
                     setState(() {
                       if (isFavorite) {
-                        _favoriteItems.remove(item); // Удаляем из избранного
+                        _favoriteItems.remove(item);
                       } else {
-                        _favoriteItems.add(item); // Добавляем в избранное
+                        _favoriteItems.add(item);
                       }
                     });
                   },
