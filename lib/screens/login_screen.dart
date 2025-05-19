@@ -44,7 +44,12 @@ class _LoginScreenState extends State<LoginScreen> {
         }
 
         // Если вход успешен и email подтвержден, перенаправляем на экран ресторанов
-        Navigator.pushReplacementNamed(context, '/restaurants');
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/restaurants',
+          (route) => false,
+        );
+
         print('User logged in: ${credential.user?.email}');
       } on FirebaseAuthException catch (e) {
         // Обрабатываем ошибки Firebase

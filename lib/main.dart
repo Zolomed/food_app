@@ -42,24 +42,12 @@ class MyApp extends StatelessWidget {
         '/food_selection': (context) => FoodSelectionScreen(),
         '/add_address': (context) => AddAddressScreen(),
         '/reset_password': (context) => ResetPasswordScreen(),
-        '/verification_code': (context) =>
-            VerificationCodeScreen(), //TODO сделать VerificationCodeScreen
         '/restaurant': (context) => RestaurantScreen(),
         '/restaurants': (context) => MainScreen(initialIndex: 0),
         '/payment': (context) => MainScreen(initialIndex: 1),
         '/profile': (context) => MainScreen(initialIndex: 2),
         '/edit_profile': (context) => EditProfileScreen(),
       },
-    );
-  }
-}
-
-class VerificationCodeScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Код подтверждения')),
-      body: Center(child: Text('Экран ввода кода подтверждения')),
     );
   }
 }

@@ -77,8 +77,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             SizedBox(height: 20),
                             CircleAvatar(
                               radius: 50,
-                              backgroundImage: AssetImage(
-                                  'assets/images/avatar_placeholder.png'),
+                              backgroundImage: userData!.photoUrl != null &&
+                                      userData!.photoUrl!.isNotEmpty
+                                  ? NetworkImage(userData!.photoUrl!)
+                                  : AssetImage(
+                                          'assets/images/avatar_placeholder.png')
+                                      as ImageProvider,
                             ),
                             SizedBox(height: 10),
                             Text(

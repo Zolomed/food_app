@@ -14,11 +14,18 @@ class SplashScreen extends StatelessWidget {
         }
         if (snapshot.data != null) {
           // Пользователь авторизован
-          Future.microtask(
-              () => Navigator.pushReplacementNamed(context, '/restaurants'));
+          Future.microtask(() => Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/restaurants',
+                (route) => false,
+              ));
         } else {
           // Пользователь не авторизован
-          Future.microtask(() => Navigator.pushReplacementNamed(context, '/'));
+          Future.microtask(() => Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/',
+                (route) => false,
+              ));
         }
         return SizedBox.shrink();
       },
