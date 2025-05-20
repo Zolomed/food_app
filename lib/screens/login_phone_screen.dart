@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 
 //TODO сделать возможность входа по телефону и emil?
-//TODO отображение пароля по глазику
 
 class LoginPhoneScreen extends StatefulWidget {
   @override

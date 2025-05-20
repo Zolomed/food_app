@@ -15,14 +15,15 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
   final nameController = TextEditingController();
   final descriptionController = TextEditingController();
   File? _restaurantImageFile;
-  String? _restaurantImageUrl;
 
   // Для меню
   final List<Map<String, dynamic>> menuItems = [];
   final menuNameController = TextEditingController();
   final menuPriceController = TextEditingController();
+  final menuCategoryController = TextEditingController();
+  final menuWeightController = TextEditingController();
+  final menuDescriptionController = TextEditingController();
   File? _menuImageFile;
-  String? _menuImageUrl;
 
   bool isLoading = false;
 
@@ -69,10 +70,16 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
       'name': menuNameController.text.trim(),
       'price': int.tryParse(menuPriceController.text.trim()) ?? 0,
       'image': imageUrl ?? '',
+      'category': menuCategoryController.text.trim(),
+      'weight': menuWeightController.text.trim(),
+      'description': menuDescriptionController.text.trim(),
     });
 
     menuNameController.clear();
     menuPriceController.clear();
+    menuCategoryController.clear();
+    menuWeightController.clear();
+    menuDescriptionController.clear();
     _menuImageFile = null;
     setState(() => isLoading = false);
   }
@@ -178,6 +185,35 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
                             keyboardType: TextInputType.number,
                           ),
                         ),
+                      ],
+                    ),
+                    SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: menuCategoryController,
+                            decoration: InputDecoration(labelText: 'Категория'),
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: TextFormField(
+                            controller: menuWeightController,
+                            decoration: InputDecoration(
+                                labelText: 'Вес (например, 260 г)'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 10),
+                    TextFormField(
+                      controller: menuDescriptionController,
+                      decoration: InputDecoration(labelText: 'Описание блюда'),
+                    ),
+                    SizedBox(height: 10),
+                    Row(
+                      children: [
                         IconButton(
                           icon: Icon(Icons.camera_alt, color: Colors.orange),
                           onPressed: _pickMenuImage,

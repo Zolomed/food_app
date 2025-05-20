@@ -27,7 +27,7 @@ class _MainScreenState extends State<MainScreen> {
     _screens = [
       RestaurantSelectionScreen(),
       PaymentScreen(),
-      FavoritesScreen(favoriteItems: _favoriteItems), // Экран избранного
+      FavoritesScreen(),
       ProfileScreen(),
     ];
   }

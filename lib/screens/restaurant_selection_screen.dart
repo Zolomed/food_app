@@ -115,7 +115,7 @@ class RestaurantSelectionScreen extends StatelessWidget {
                             Navigator.pushNamed(
                               context,
                               '/food_selection',
-                              arguments: restaurant.menu,
+                              arguments: restaurant,
                             );
                           },
                           child: Text(

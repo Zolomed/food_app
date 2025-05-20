@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 //TODO сделать возможность входа по телефону и emil?
-//TODO отображение пароля по глазику
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -60,6 +59,11 @@ class _LoginScreenState extends State<LoginScreen> {
         } else if (e.code == 'wrong-password') {
           setState(() {
             errorMessage = 'Неверный пароль.';
+          });
+        } else if (e.code == 'invalid-credential' ||
+            e.code == 'invalid-login-credentials') {
+          setState(() {
+            errorMessage = 'Неверный email или пароль.';
           });
         } else {
           setState(() {

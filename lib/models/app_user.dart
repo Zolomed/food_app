@@ -4,6 +4,8 @@ class AppUser {
   final String email;
   final String phone;
   final String? photoUrl;
+  final List<String> favorites;
+  final List<Map<String, dynamic>> cart;
 
   AppUser({
     required this.uid,
@@ -11,6 +13,8 @@ class AppUser {
     required this.email,
     required this.phone,
     this.photoUrl,
+    this.favorites = const [],
+    this.cart = const [],
   });
 
   Map<String, dynamic> toMap() {
@@ -19,6 +23,8 @@ class AppUser {
       'email': email,
       'phone': phone,
       'photoUrl': photoUrl,
+      'favorites': favorites,
+      'cart': cart,
     };
   }
 
@@ -29,6 +35,8 @@ class AppUser {
       email: map['email'] ?? '',
       phone: map['phone'] ?? '',
       photoUrl: map['photoUrl'],
+      favorites: List<String>.from(map['favorites'] ?? []),
+      cart: List<Map<String, dynamic>>.from(map['cart'] ?? []),
     );
   }
 }

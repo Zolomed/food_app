@@ -3,11 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:food_app/models/app_user.dart';
 
-//TODO сделать сохранение информации в бд
-//TODO сделать отмену редактирования данных
-//TODO реализовать отдельный экран изменения данных
-//TODO изменить поля для ввода в базу данных и отображение информации не через поля, а через текст
-
 class ProfileScreen extends StatefulWidget {
   @override
   _ProfileScreenState createState() => _ProfileScreenState();

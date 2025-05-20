@@ -47,7 +47,7 @@ class RestaurantScreen extends StatelessWidget {
                   Navigator.pushNamed(
                     context,
                     '/food_selection',
-                    arguments: restaurant.menu, // Передаем меню ресторана
+                    arguments: restaurant,
                   );
                 },
                 style: ElevatedButton.styleFrom(
