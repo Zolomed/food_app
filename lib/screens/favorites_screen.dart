@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:food_app/widgets/food_card.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
@@ -13,12 +14,15 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   List<Map<String, dynamic>> favoriteItems = [];
   Map<String, int> cartQuantities = {};
   bool isLoading = true;
+  List<String> userAllergies = [];
+  bool hideAllergenFoods = true;
 
   @override
   void initState() {
     super.initState();
     _loadFavorites();
     _loadCartQuantities();
+    _loadUserAllergies();
   }
 
   Future<void> _loadFavorites() async {
@@ -70,6 +74,19 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     });
   }
 
+  Future<void> _loadUserAllergies() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
+    setState(() {
+      userAllergies = List<String>.from(doc.data()?['allergies'] ?? []);
+      hideAllergenFoods = doc.data()?['hideAllergenFoods'] ?? true;
+    });
+  }
+
   Future<void> toggleFavorite(String menuItemId) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -82,7 +99,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       favorites.add(menuItemId);
     }
     await docRef.update({'favorites': favorites});
-    _loadFavorites();
+    await _loadFavorites();
   }
 
   Future<void> addToCart(Map<String, dynamic> item) async {
@@ -161,160 +178,34 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   itemBuilder: (context, index) {
                     final item = favoriteItems[index];
                     final quantity = cartQuantities[item['menuItemId']] ?? 0;
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Color(0xFFF8F7F5),
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Картинка + сердечко
-                          Padding(
-                            padding: const EdgeInsets.only(
-                                left: 12, right: 12, top: 12, bottom: 0),
-                            child: Stack(
-                              children: [
-                                Center(
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: item['image'] != null &&
-                                            item['image']
-                                                .toString()
-                                                .startsWith('http')
-                                        ? Image.network(
-                                            item['image'],
-                                            height: 110,
-                                            fit: BoxFit.contain,
-                                          )
-                                        : Image.asset(
-                                            item['image'] ?? '',
-                                            height: 110,
-                                            fit: BoxFit.contain,
-                                          ),
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 6,
-                                  right: 6,
-                                  child: GestureDetector(
-                                    onTap: () async {
-                                      await toggleFavorite(item['menuItemId']);
-                                    },
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.85),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      padding: EdgeInsets.all(4),
-                                      child: Icon(
-                                        Icons.favorite,
-                                        color: Colors.red,
-                                        size: 22,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(
-                              '${item['price'].toStringAsFixed(2)}₽',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(
-                              item['name'] ?? '',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(
-                              [
-                                if (item['weight'] != null)
-                                  '${item['weight']} г'
-                              ].join(' · '),
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ),
-                          Expanded(child: SizedBox()),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 10),
-                            child: quantity > 0
-                                ? Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      IconButton(
-                                        icon: Icon(Icons.remove_circle_outline),
-                                        onPressed: () async {
-                                          await removeFromCart(item);
-                                          setState(() {});
-                                        },
-                                      ),
-                                      Text(
-                                        '$quantity',
-                                        style: TextStyle(fontSize: 18),
-                                      ),
-                                      IconButton(
-                                        icon: Icon(Icons.add_circle_outline),
-                                        onPressed: () async {
-                                          await addToCart(item);
-                                          setState(() {});
-                                        },
-                                      ),
-                                    ],
-                                  )
-                                : SizedBox(
-                                    width: double.infinity,
-                                    child: ElevatedButton.icon(
-                                      onPressed: () async {
-                                        await addToCart(item);
-                                        setState(() {});
-                                      },
-                                      icon:
-                                          Icon(Icons.add, color: Colors.black),
-                                      label: Text(
-                                        'Добавить',
-                                        style: TextStyle(
-                                            color: Colors.black,
-                                            fontWeight: FontWeight.w600),
-                                      ),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.white,
-                                        elevation: 0,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(16),
-                                        ),
-                                        side: BorderSide(
-                                            color: Colors.black12, width: 1),
-                                        padding:
-                                            EdgeInsets.symmetric(vertical: 10),
-                                      ),
-                                    ),
-                                  ),
-                          ),
-                        ],
-                      ),
+                    final List allergens = item['allergens'] ?? [];
+                    final containsAllergen =
+                        allergens.any((a) => userAllergies.contains(a));
+                    if (hideAllergenFoods && containsAllergen) {
+                      return const SizedBox.shrink();
+                    }
+                    return FoodCard(
+                      image: item['image'] ?? '',
+                      name: item['name'] ?? '',
+                      price: (item['price'] is int)
+                          ? (item['price'] as int).toDouble()
+                          : (item['price'] ?? 0.0),
+                      weight: item['weight']?.toString(),
+                      isFavorite: true,
+                      quantity: quantity,
+                      onFavoriteTap: () async {
+                        await toggleFavorite(item['menuItemId']);
+                        setState(() {});
+                      },
+                      onAdd: () async {
+                        await addToCart(item);
+                        setState(() {});
+                      },
+                      onRemove: () async {
+                        await removeFromCart(item);
+                        setState(() {});
+                      },
+                      allergenWarning: !hideAllergenFoods && containsAllergen,
                     );
                   },
                 ),

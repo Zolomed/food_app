@@ -3,10 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/menu_item.dart';
 import '../models/restaurant.dart';
-
-//TODO Сделать сортировку блюд
-//TODO реализовать правильные переходы
-//TODO сделать открытие блюд
+import '../widgets/food_card.dart'; // Импортируем переиспользуемый виджет
 
 class FoodSelectionScreen extends StatefulWidget {
   const FoodSelectionScreen({super.key});
@@ -49,7 +46,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
     });
     await _loadFavorites();
     await _loadCartQuantities();
-    await _loadUserAllergies(); // загрузить аллергии
+    await _loadUserAllergies();
   }
 
   Future<void> _loadUserAllergies() async {
@@ -239,172 +236,26 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                 final containsAllergen =
                     item.allergens.any((a) => userAllergies.contains(a));
 
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Color(0xFFF8F7F5),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Картинка + сердечко
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            left: 12, right: 12, top: 12, bottom: 0),
-                        child: Stack(
-                          children: [
-                            Center(
-                              // Центрируем картинку
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(16),
-                                child: item.image.startsWith('http')
-                                    ? Image.network(
-                                        item.image,
-                                        height: 110,
-                                        fit: BoxFit.contain,
-                                      )
-                                    : Image.asset(
-                                        item.image,
-                                        height: 110,
-                                        fit: BoxFit.contain,
-                                      ),
-                              ),
-                            ),
-                            Positioned(
-                              top: 6,
-                              right: 6,
-                              child: GestureDetector(
-                                onTap: () async {
-                                  await _toggleFavorite(item.id);
-                                },
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.85),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  padding: EdgeInsets.all(4),
-                                  child: Icon(
-                                    isFavorite
-                                        ? Icons.favorite
-                                        : Icons.favorite_border,
-                                    color:
-                                        isFavorite ? Colors.red : Colors.grey,
-                                    size: 22,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Text(
-                          '${item.price.toStringAsFixed(2)}₽',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Text(
-                          item.name,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Text(
-                          [if (item.weight != null) '${item.weight} г']
-                              .join(' · '),
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ),
-                      if (!hideAllergenFoods && containsAllergen)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 2),
-                          child: Row(
-                            children: [
-                              Icon(Icons.warning, color: Colors.red, size: 16),
-                              SizedBox(width: 4),
-                              Text(
-                                'Содержит ваш аллерген',
-                                style:
-                                    TextStyle(color: Colors.red, fontSize: 11),
-                              ),
-                            ],
-                          ),
-                        ),
-                      Expanded(child: SizedBox()),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
-                        child: quantity > 0
-                            ? Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  IconButton(
-                                    icon: Icon(Icons.remove_circle_outline),
-                                    onPressed: () async {
-                                      await removeFromCart(item);
-                                      setState(() {});
-                                    },
-                                  ),
-                                  Text(
-                                    '$quantity',
-                                    style: TextStyle(fontSize: 18),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.add_circle_outline),
-                                    onPressed: () async {
-                                      await addToCart(item);
-                                      setState(() {});
-                                    },
-                                  ),
-                                ],
-                              )
-                            : SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton.icon(
-                                  onPressed: () async {
-                                    await addToCart(item);
-                                    setState(() {});
-                                  },
-                                  icon: Icon(Icons.add, color: Colors.black),
-                                  label: Text(
-                                    'Добавить',
-                                    style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.w600),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    elevation: 0,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    side: BorderSide(
-                                        color: Colors.black12, width: 1),
-                                    padding: EdgeInsets.symmetric(vertical: 10),
-                                  ),
-                                ),
-                              ),
-                      ),
-                    ],
-                  ),
+                return FoodCard(
+                  image: item.image,
+                  name: item.name,
+                  price: item.price.toDouble(),
+                  weight: item.weight?.toString(),
+                  isFavorite: isFavorite,
+                  quantity: quantity,
+                  onFavoriteTap: () async {
+                    await _toggleFavorite(item.id);
+                    setState(() {});
+                  },
+                  onAdd: () async {
+                    await addToCart(item);
+                    setState(() {});
+                  },
+                  onRemove: () async {
+                    await removeFromCart(item);
+                    setState(() {});
+                  },
+                  allergenWarning: !hideAllergenFoods && containsAllergen,
                 );
               },
             ),
