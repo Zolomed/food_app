@@ -162,7 +162,6 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
       return Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    // Фильтрация по аллергиям
     final filteredMenu = menu.where((item) {
       final hasAllergen = item.allergens.any((a) => userAllergies.contains(a));
       if (hideAllergenFoods) {
@@ -222,9 +221,16 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
               },
             ),
           ),
+          // Сетка карточек еды
           Expanded(
-            child: ListView.builder(
+            child: GridView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 18,
+                crossAxisSpacing: 12,
+                childAspectRatio: 0.60,
+              ),
               itemCount: filteredMenu.length,
               itemBuilder: (context, index) {
                 final item = filteredMenu[index];
@@ -233,138 +239,171 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                 final containsAllergen =
                     item.allergens.any((a) => userAllergies.contains(a));
 
-                return Card(
-                  margin: EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Color(0xFFF8F7F5),
+                    borderRadius: BorderRadius.circular(24),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      children: [
-                        Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Картинка + сердечко
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 12, right: 12, top: 12, bottom: 0),
+                        child: Stack(
                           children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: item.image.startsWith('http')
-                                  ? Image.network(
-                                      item.image,
-                                      width: 100,
-                                      height: 100,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Image.asset(
-                                      item.image,
-                                      width: 100,
-                                      height: 100,
-                                      fit: BoxFit.cover,
-                                    ),
-                            ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    item.name,
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    '${item.price}₽',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.orange,
-                                    ),
-                                  ),
-                                  if (item.weight != null)
-                                    Text(
-                                      '${item.weight} г',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey,
+                            Center(
+                              // Центрируем картинку
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: item.image.startsWith('http')
+                                    ? Image.network(
+                                        item.image,
+                                        height: 110,
+                                        fit: BoxFit.contain,
+                                      )
+                                    : Image.asset(
+                                        item.image,
+                                        height: 110,
+                                        fit: BoxFit.contain,
                                       ),
-                                    ),
-                                  if (!hideAllergenFoods && containsAllergen)
-                                    Row(
-                                      children: [
-                                        Icon(Icons.warning,
-                                            color: Colors.red, size: 18),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          'Содержит ваш аллерген',
-                                          style: TextStyle(
-                                              color: Colors.red, fontSize: 12),
-                                        ),
-                                      ],
-                                    ),
-                                ],
                               ),
                             ),
-                            IconButton(
-                              icon: Icon(
-                                isFavorite
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                                color: isFavorite ? Colors.red : Colors.grey,
+                            Positioned(
+                              top: 6,
+                              right: 6,
+                              child: GestureDetector(
+                                onTap: () async {
+                                  await _toggleFavorite(item.id);
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.85),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  padding: EdgeInsets.all(4),
+                                  child: Icon(
+                                    isFavorite
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color:
+                                        isFavorite ? Colors.red : Colors.grey,
+                                    size: 22,
+                                  ),
+                                ),
                               ),
-                              onPressed: () => _toggleFavorite(item.id),
                             ),
                           ],
                         ),
-                        SizedBox(height: 8),
-                        quantity > 0
+                      ),
+                      SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          '${item.price.toStringAsFixed(2)}₽',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          item.name,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          [if (item.weight != null) '${item.weight} г']
+                              .join(' · '),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ),
+                      if (!hideAllergenFoods && containsAllergen)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 2),
+                          child: Row(
+                            children: [
+                              Icon(Icons.warning, color: Colors.red, size: 16),
+                              SizedBox(width: 4),
+                              Text(
+                                'Содержит ваш аллерген',
+                                style:
+                                    TextStyle(color: Colors.red, fontSize: 11),
+                              ),
+                            ],
+                          ),
+                        ),
+                      Expanded(child: SizedBox()),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
+                        child: quantity > 0
                             ? Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Row(
-                                    children: [
-                                      IconButton(
-                                        icon: Icon(Icons.remove_circle_outline),
-                                        onPressed: () async {
-                                          await removeFromCart(item);
-                                          setState(() {});
-                                        },
-                                      ),
-                                      Text(
-                                        '$quantity',
-                                        style: TextStyle(fontSize: 18),
-                                      ),
-                                      IconButton(
-                                        icon: Icon(Icons.add_circle_outline),
-                                        onPressed: () async {
-                                          await addToCart(item);
-                                          setState(() {});
-                                        },
-                                      ),
-                                    ],
+                                  IconButton(
+                                    icon: Icon(Icons.remove_circle_outline),
+                                    onPressed: () async {
+                                      await removeFromCart(item);
+                                      setState(() {});
+                                    },
+                                  ),
+                                  Text(
+                                    '$quantity',
+                                    style: TextStyle(fontSize: 18),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.add_circle_outline),
+                                    onPressed: () async {
+                                      await addToCart(item);
+                                      setState(() {});
+                                    },
                                   ),
                                 ],
                               )
-                            : Align(
-                                alignment: Alignment.centerRight,
+                            : SizedBox(
+                                width: double.infinity,
                                 child: ElevatedButton.icon(
                                   onPressed: () async {
                                     await addToCart(item);
                                     setState(() {});
                                   },
-                                  icon: Icon(Icons.add),
-                                  label: Text('Добавить'),
+                                  icon: Icon(Icons.add, color: Colors.black),
+                                  label: Text(
+                                    'Добавить',
+                                    style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.w600),
+                                  ),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.orange,
+                                    backgroundColor: Colors.white,
+                                    elevation: 0,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
+                                      borderRadius: BorderRadius.circular(16),
                                     ),
+                                    side: BorderSide(
+                                        color: Colors.black12, width: 1),
+                                    padding: EdgeInsets.symmetric(vertical: 10),
                                   ),
                                 ),
                               ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 );
               },

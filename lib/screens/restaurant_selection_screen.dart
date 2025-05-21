@@ -44,90 +44,100 @@ class RestaurantSelectionScreen extends StatelessWidget {
           }
           final restaurants = snapshot.data!;
           return ListView.builder(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             itemCount: restaurants.length,
             itemBuilder: (context, index) {
               final restaurant = restaurants[index];
-              return Card(
-                margin: EdgeInsets.symmetric(vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Column(
-                  children: [
-                    Row(
+              //TODO сделать через бд
+              final deliveryTime = '45–55 мин';
+              final rating = 4.8;
+              final cuisine = 'Русская, Блины, Десерты';
+              return Container(
+                margin: EdgeInsets.only(bottom: 24),
+                child: Material(
+                  elevation: 2,
+                  borderRadius: BorderRadius.circular(28),
+                  color: Colors.white,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(28),
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        '/food_selection',
+                        arguments: restaurant,
+                      );
+                    },
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: restaurant.image.startsWith('http')
-                              ? Image.network(
-                                  restaurant.image,
-                                  width: 100,
-                                  height: 100,
-                                  fit: BoxFit.cover,
-                                )
-                              : Image.asset(
-                                  restaurant.image,
-                                  width: 100,
-                                  height: 100,
-                                  fit: BoxFit.cover,
-                                ),
+                        // Картинка ресторана
+                        Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(28),
+                              child: restaurant.image.startsWith('http')
+                                  ? Image.network(
+                                      restaurant.image,
+                                      width: double.infinity,
+                                      height: 180,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.asset(
+                                      restaurant.image,
+                                      width: double.infinity,
+                                      height: 180,
+                                      fit: BoxFit.cover,
+                                    ),
+                            ),
+                          ],
                         ),
-                        SizedBox(width: 10),
-                        Expanded(
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 restaurant.name,
                                 style: TextStyle(
-                                  fontSize: 18,
+                                  fontSize: 22,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              SizedBox(height: 5),
-                              Text(
-                                restaurant.description,
-                                style: TextStyle(color: Colors.grey),
+                              SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Icon(Icons.directions_car,
+                                      size: 18, color: Colors.grey[700]),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    deliveryTime,
+                                    style: TextStyle(
+                                        fontSize: 15, color: Colors.black87),
+                                  ),
+                                  SizedBox(width: 16),
+                                  Icon(Icons.star,
+                                      size: 18, color: Colors.orange),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    rating.toString(),
+                                    style: TextStyle(
+                                        fontSize: 15, color: Colors.black87),
+                                  ),
+                                ],
                               ),
+                              SizedBox(height: 8),
+                              Text(
+                                cuisine,
+                                style: TextStyle(
+                                    color: Colors.black87, fontSize: 15),
+                              ),
+                              SizedBox(height: 12),
                             ],
                           ),
                         ),
                       ],
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pushNamed(
-                              context,
-                              '/restaurant',
-                              arguments: restaurant,
-                            );
-                          },
-                          child: Text(
-                            'Подробнее',
-                            style: TextStyle(color: Colors.orange),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pushNamed(
-                              context,
-                              '/food_selection',
-                              arguments: restaurant,
-                            );
-                          },
-                          child: Text(
-                            'Посмотреть меню',
-                            style: TextStyle(color: Colors.orange),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
               );
             },

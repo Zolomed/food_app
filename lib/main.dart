@@ -16,7 +16,6 @@ import 'screens/splash_screen.dart';
 //TODO как то убрать кучу импортов
 //TODO сделать динамическое отображение информации, чтоб кнопки не убегали
 //TODO сделать экран избранного для еды и ресторанов
-//TODO сделать учет аллергий
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,7 +35,24 @@ class MyApp extends StatelessWidget {
       title: 'Food Delivery',
       theme: ThemeData(
         primarySwatch: Colors.orange,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
         scaffoldBackgroundColor: Colors.white,
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            foregroundColor: Colors.white, // цвет текста
+            backgroundColor: Colors.orange, // цвет фона кнопки
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.white, // цвет текста для TextButton
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.white, // цвет текста для OutlinedButton
+          ),
+        ),
       ),
       initialRoute: '/splash',
       routes: {

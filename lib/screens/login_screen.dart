@@ -1,8 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-//TODO сделать возможность входа по телефону и emil?
-
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
