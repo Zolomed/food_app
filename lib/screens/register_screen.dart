@@ -7,6 +7,8 @@ import 'package:food_app/models/app_user.dart';
 //TODO сделать проверку на русский в пароле
 
 class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
+
   @override
   _RegisterScreenState createState() => _RegisterScreenState();
 }

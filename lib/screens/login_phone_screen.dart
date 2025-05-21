@@ -6,6 +6,8 @@ import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 //TODO сделать возможность входа по телефону и emil?
 
 class LoginPhoneScreen extends StatefulWidget {
+  const LoginPhoneScreen({super.key});
+
   @override
   _LoginPhoneScreenState createState() => _LoginPhoneScreenState();
 }

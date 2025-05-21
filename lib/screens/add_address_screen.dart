@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 //TODO сделать подсказки при вводе адреса
 
 class AddAddressScreen extends StatefulWidget {
+  const AddAddressScreen({super.key});
+
   @override
   _AddAddressScreenState createState() => _AddAddressScreenState();
 }

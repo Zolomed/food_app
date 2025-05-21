@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/restaurant.dart';
 
 class RestaurantScreen extends StatelessWidget {
+  const RestaurantScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final Restaurant restaurant =

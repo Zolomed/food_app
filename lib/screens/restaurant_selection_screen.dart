@@ -4,6 +4,8 @@ import '../models/restaurant.dart';
 import '../models/menu_item.dart';
 
 class RestaurantSelectionScreen extends StatelessWidget {
+  const RestaurantSelectionScreen({super.key});
+
   Future<List<Restaurant>> fetchRestaurants() async {
     final restaurantsSnapshot =
         await FirebaseFirestore.instance.collection('restaurants').get();

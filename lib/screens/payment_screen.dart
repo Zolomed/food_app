@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 //TODO реализовать правильные переходы
 
 class PaymentScreen extends StatefulWidget {
+  const PaymentScreen({super.key});
+
   @override
   _PaymentScreenState createState() => _PaymentScreenState();
 }

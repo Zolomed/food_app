@@ -7,7 +7,7 @@ import 'favorites_screen.dart';
 class MainScreen extends StatefulWidget {
   final int initialIndex;
 
-  MainScreen({this.initialIndex = 0});
+  const MainScreen({super.key, this.initialIndex = 0});
 
   @override
   _MainScreenState createState() => _MainScreenState();
@@ -15,8 +15,6 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
-
-  final Set<Map<String, dynamic>> _favoriteItems = {}; // Избранные блюда
 
   late final List<Widget> _screens;
 

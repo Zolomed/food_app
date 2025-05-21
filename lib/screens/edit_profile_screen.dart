@@ -9,6 +9,8 @@ import 'dart:io';
 //TODO сделать уведомление о смене пароля
 
 class EditProfileScreen extends StatefulWidget {
+  const EditProfileScreen({super.key});
+
   @override
   _EditProfileScreenState createState() => _EditProfileScreenState();
 }
@@ -160,7 +162,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       SizedBox(height: 30),
                       ElevatedButton(
                         onPressed: _saveProfile,
-                        child: Text('Сохранить'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orange,
                           shape: RoundedRectangleBorder(
@@ -169,6 +170,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           padding: EdgeInsets.symmetric(
                               horizontal: 70, vertical: 15),
                         ),
+                        child: Text('Сохранить'),
                       ),
                     ],
                   ),

@@ -16,6 +16,7 @@ import 'screens/splash_screen.dart';
 //TODO как то убрать кучу импортов
 //TODO сделать динамическое отображение информации, чтоб кнопки не убегали
 //TODO сделать экран избранного для еды и ресторанов
+//TODO сделать учет аллергий
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +27,8 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

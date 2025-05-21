@@ -5,6 +5,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 
 class AdminAddRestaurantScreen extends StatefulWidget {
+  const AdminAddRestaurantScreen({super.key});
+
   @override
   State<AdminAddRestaurantScreen> createState() =>
       _AdminAddRestaurantScreenState();
@@ -56,8 +58,9 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
   }
 
   void _addMenuItem() async {
-    if (menuNameController.text.isEmpty || menuPriceController.text.isEmpty)
+    if (menuNameController.text.isEmpty || menuPriceController.text.isEmpty) {
       return;
+    }
     setState(() => isLoading = true);
 
     String? imageUrl;
@@ -227,7 +230,6 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
                     SizedBox(height: 30),
                     ElevatedButton(
                       onPressed: _saveRestaurant,
-                      child: Text('Сохранить ресторан'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange,
                         shape: RoundedRectangleBorder(
@@ -236,6 +238,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
                         padding:
                             EdgeInsets.symmetric(horizontal: 70, vertical: 15),
                       ),
+                      child: Text('Сохранить ресторан'),
                     ),
                   ],
                 ),

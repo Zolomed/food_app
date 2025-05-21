@@ -9,6 +9,8 @@ import '../models/restaurant.dart';
 //TODO сделать открытие блюд
 
 class FoodSelectionScreen extends StatefulWidget {
+  const FoodSelectionScreen({super.key});
+
   @override
   _FoodSelectionScreenState createState() => _FoodSelectionScreenState();
 }
@@ -162,7 +164,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Категории
-          Container(
+          SizedBox(
             height: 50,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
