@@ -23,7 +23,9 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
   List<String> categories = [];
   List<MenuItem> menu = [];
   Restaurant? restaurant;
-  Map<String, int> cartQuantities = {}; // menuItemId -> quantity
+  Map<String, int> cartQuantities = {};
+  List<String> userAllergies = [];
+  bool hideAllergenFoods = true;
 
   @override
   void didChangeDependencies() {
@@ -47,6 +49,20 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
     });
     await _loadFavorites();
     await _loadCartQuantities();
+    await _loadUserAllergies(); // загрузить аллергии
+  }
+
+  Future<void> _loadUserAllergies() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
+    setState(() {
+      userAllergies = List<String>.from(doc.data()?['allergies'] ?? []);
+      hideAllergenFoods = doc.data()?['hideAllergenFoods'] ?? true;
+    });
   }
 
   Future<void> _loadFavorites() async {
@@ -146,9 +162,16 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
       return Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    final filteredMenu = menu
-        .where((item) => (item.category ?? 'Без категории') == selectedCategory)
-        .toList();
+    // Фильтрация по аллергиям
+    final filteredMenu = menu.where((item) {
+      final hasAllergen = item.allergens.any((a) => userAllergies.contains(a));
+      if (hideAllergenFoods) {
+        return !hasAllergen &&
+            (item.category ?? 'Без категории') == selectedCategory;
+      } else {
+        return (item.category ?? 'Без категории') == selectedCategory;
+      }
+    }).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -207,6 +230,8 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                 final item = filteredMenu[index];
                 final isFavorite = _favoriteIds.contains(item.id);
                 final quantity = cartQuantities[item.id] ?? 0;
+                final containsAllergen =
+                    item.allergens.any((a) => userAllergies.contains(a));
 
                 return Card(
                   margin: EdgeInsets.symmetric(vertical: 8),
@@ -263,6 +288,19 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                                         fontSize: 14,
                                         color: Colors.grey,
                                       ),
+                                    ),
+                                  if (!hideAllergenFoods && containsAllergen)
+                                    Row(
+                                      children: [
+                                        Icon(Icons.warning,
+                                            color: Colors.red, size: 18),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Содержит ваш аллерген',
+                                          style: TextStyle(
+                                              color: Colors.red, fontSize: 12),
+                                        ),
+                                      ],
                                     ),
                                 ],
                               ),

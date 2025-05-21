@@ -21,14 +21,29 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final phoneController = TextEditingController();
   final emailController = TextEditingController();
   bool isLoading = true;
+  List<String> selectedAllergies = [];
+  bool hideAllergenFoods = true;
 
   File? _avatarFile;
   String? _photoUrl;
 
+  List<String> allAllergies = [];
+  bool isLoadingAllergies = true;
+
   @override
   void initState() {
     super.initState();
+    fetchAllAllergies();
     _loadUserData();
+  }
+
+  Future<void> fetchAllAllergies() async {
+    final snapshot =
+        await FirebaseFirestore.instance.collection('allergies').get();
+    setState(() {
+      allAllergies = snapshot.docs.map((doc) => doc['name'] as String).toList();
+      isLoadingAllergies = false;
+    });
   }
 
   Future<void> _loadUserData() async {
@@ -43,6 +58,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       phoneController.text = data?['phone'] ?? '';
       emailController.text = data?['email'] ?? '';
       _photoUrl = data?['photoUrl'];
+      selectedAllergies = List<String>.from(data?['allergies'] ?? []);
+      hideAllergenFoods = data?['hideAllergenFoods'] ?? true;
       setState(() {
         isLoading = false;
       });
@@ -81,6 +98,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           'phone': phoneController.text.trim(),
           'email': emailController.text.trim(),
           'photoUrl': photoUrl,
+          'allergies': selectedAllergies,
+          'hideAllergenFoods': hideAllergenFoods,
         });
         Navigator.pop(context);
       }
@@ -89,94 +108,129 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoadingAllergies || isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: Text('Редактировать профиль')),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       appBar: AppBar(title: Text('Редактировать профиль')),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  child: Column(
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                SizedBox(height: 20),
+                Center(
+                  child: Stack(
                     children: [
-                      SizedBox(height: 20),
-                      Center(
-                        child: Stack(
-                          children: [
-                            GestureDetector(
-                              onTap: _pickAvatar,
-                              child: CircleAvatar(
-                                radius: 50,
-                                backgroundImage: _avatarFile != null
-                                    ? FileImage(_avatarFile!)
-                                    : (_photoUrl != null &&
-                                            _photoUrl!.isNotEmpty
-                                        ? NetworkImage(_photoUrl!)
-                                        : AssetImage(
-                                                'assets/images/avatar_placeholder.png')
-                                            as ImageProvider),
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: IconButton(
-                                icon: Icon(Icons.camera_alt,
-                                    color: Colors.orange),
-                                onPressed: _pickAvatar,
-                              ),
-                            ),
-                          ],
+                      GestureDetector(
+                        onTap: _pickAvatar,
+                        child: CircleAvatar(
+                          radius: 50,
+                          backgroundImage: _avatarFile != null
+                              ? FileImage(_avatarFile!)
+                              : (_photoUrl != null && _photoUrl!.isNotEmpty
+                                  ? NetworkImage(_photoUrl!)
+                                  : AssetImage(
+                                          'assets/images/avatar_placeholder.png')
+                                      as ImageProvider),
                         ),
                       ),
-                      SizedBox(height: 20),
-                      TextFormField(
-                        controller: nameController,
-                        decoration: InputDecoration(labelText: 'Имя'),
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Введите имя'
-                            : null,
-                      ),
-                      SizedBox(height: 20),
-                      TextFormField(
-                        controller: phoneController,
-                        decoration: InputDecoration(labelText: 'Телефон'),
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Введите телефон'
-                            : null,
-                      ),
-                      SizedBox(height: 20),
-                      TextFormField(
-                        controller: emailController,
-                        decoration: InputDecoration(labelText: 'E-mail'),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) return null;
-                          final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-                          if (!emailRegex.hasMatch(value)) {
-                            return 'Введите корректный email';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: 30),
-                      ElevatedButton(
-                        onPressed: _saveProfile,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 70, vertical: 15),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: IconButton(
+                          icon: Icon(Icons.camera_alt, color: Colors.orange),
+                          onPressed: _pickAvatar,
                         ),
-                        child: Text('Сохранить'),
                       ),
                     ],
                   ),
                 ),
-              ),
+                SizedBox(height: 20),
+                TextFormField(
+                  controller: nameController,
+                  decoration: InputDecoration(labelText: 'Имя'),
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Введите имя' : null,
+                ),
+                SizedBox(height: 20),
+                TextFormField(
+                  controller: phoneController,
+                  decoration: InputDecoration(labelText: 'Телефон'),
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Введите телефон' : null,
+                ),
+                SizedBox(height: 20),
+                TextFormField(
+                  controller: emailController,
+                  decoration: InputDecoration(labelText: 'E-mail'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return null;
+                    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                    if (!emailRegex.hasMatch(value)) {
+                      return 'Введите корректный email';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 20),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Мои аллергии',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ),
+                ...allAllergies.map((allergy) => CheckboxListTile(
+                      title: Text(allergy),
+                      value: selectedAllergies.contains(allergy),
+                      onChanged: (val) {
+                        setState(() {
+                          if (val == true) {
+                            selectedAllergies.add(allergy);
+                          } else {
+                            selectedAllergies.remove(allergy);
+                          }
+                        });
+                      },
+                    )),
+                SwitchListTile(
+                  title: Text('Скрывать блюда с аллергенами'),
+                  value: hideAllergenFoods,
+                  onChanged: (val) {
+                    setState(() {
+                      hideAllergenFoods = val;
+                    });
+                  },
+                ),
+                SizedBox(height: 30),
+                // Кнопка вынесена вниз экрана для удобства
+              ],
             ),
+          ),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          child: ElevatedButton(
+            onPressed: _saveProfile,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: EdgeInsets.symmetric(vertical: 15),
+            ),
+            child: Text('Сохранить'),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -6,6 +6,7 @@ class MenuItem {
   final String? category;
   final String? weight;
   final String? description;
+  final List<String> allergens;
 
   MenuItem({
     required this.id,
@@ -15,6 +16,7 @@ class MenuItem {
     this.category,
     this.weight,
     this.description,
+    this.allergens = const [],
   });
 
   factory MenuItem.fromMap(String id, Map<String, dynamic> map) {
@@ -26,6 +28,7 @@ class MenuItem {
       category: map['category'],
       weight: map['weight'],
       description: map['description'],
+      allergens: List<String>.from(map['allergens'] ?? []),
     );
   }
 
@@ -37,6 +40,7 @@ class MenuItem {
       'category': category,
       'weight': weight,
       'description': description,
+      'allergens': allergens,
     };
   }
 }

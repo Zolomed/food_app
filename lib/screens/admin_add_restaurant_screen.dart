@@ -26,8 +26,26 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
   final menuWeightController = TextEditingController();
   final menuDescriptionController = TextEditingController();
   File? _menuImageFile;
+  List<String> selectedMenuAllergens = [];
 
+  List<String> allAllergies = [];
+  bool isLoadingAllergies = true;
   bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchAllAllergies();
+  }
+
+  Future<void> fetchAllAllergies() async {
+    final snapshot =
+        await FirebaseFirestore.instance.collection('allergies').get();
+    setState(() {
+      allAllergies = snapshot.docs.map((doc) => doc['name'] as String).toList();
+      isLoadingAllergies = false;
+    });
+  }
 
   Future<String?> _uploadImage(File file, String path) async {
     final ref = FirebaseStorage.instance.ref().child(path);
@@ -76,6 +94,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
       'category': menuCategoryController.text.trim(),
       'weight': menuWeightController.text.trim(),
       'description': menuDescriptionController.text.trim(),
+      'allergens': selectedMenuAllergens,
     });
 
     menuNameController.clear();
@@ -83,6 +102,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
     menuCategoryController.clear();
     menuWeightController.clear();
     menuDescriptionController.clear();
+    selectedMenuAllergens = [];
     _menuImageFile = null;
     setState(() => isLoading = false);
   }
@@ -104,7 +124,6 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
       'image': imageUrl ?? '',
     });
 
-    // Добавляем меню
     for (var item in menuItems) {
       await restaurantRef.collection('menu').add(item);
     }
@@ -122,6 +141,12 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoadingAllergies) {
+      return Scaffold(
+        appBar: AppBar(title: Text('Добавить ресторан (админ)')),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       appBar: AppBar(title: Text('Добавить ресторан (админ)')),
       body: isLoading
@@ -215,6 +240,27 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
                       decoration: InputDecoration(labelText: 'Описание блюда'),
                     ),
                     SizedBox(height: 10),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Аллергены блюда',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                    ),
+                    ...allAllergies.map((allergy) => CheckboxListTile(
+                          title: Text(allergy),
+                          value: selectedMenuAllergens.contains(allergy),
+                          onChanged: (val) {
+                            setState(() {
+                              if (val == true) {
+                                selectedMenuAllergens.add(allergy);
+                              } else {
+                                selectedMenuAllergens.remove(allergy);
+                              }
+                            });
+                          },
+                        )),
                     Row(
                       children: [
                         IconButton(

@@ -6,6 +6,8 @@ class AppUser {
   final String? photoUrl;
   final List<String> favorites;
   final List<Map<String, dynamic>> cart;
+  final List<String> allergies;
+  final bool hideAllergenFoods;
 
   AppUser({
     required this.uid,
@@ -15,6 +17,8 @@ class AppUser {
     this.photoUrl,
     this.favorites = const [],
     this.cart = const [],
+    this.allergies = const [],
+    this.hideAllergenFoods = true,
   });
 
   Map<String, dynamic> toMap() {
@@ -25,6 +29,8 @@ class AppUser {
       'photoUrl': photoUrl,
       'favorites': favorites,
       'cart': cart,
+      'allergies': allergies,
+      'hideAllergenFoods': hideAllergenFoods,
     };
   }
 
@@ -37,6 +43,8 @@ class AppUser {
       photoUrl: map['photoUrl'],
       favorites: List<String>.from(map['favorites'] ?? []),
       cart: List<Map<String, dynamic>>.from(map['cart'] ?? []),
+      allergies: List<String>.from(map['allergies'] ?? []),
+      hideAllergenFoods: map['hideAllergenFoods'] ?? true,
     );
   }
 }
