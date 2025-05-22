@@ -5,8 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 
-//TODO сделать потверждение пароля после смены
-//TODO сделать уведомление о смене пароля
+import 'add_address_screen.dart'; // Импортируем экран добавления адреса
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -30,11 +29,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   List<String> allAllergies = [];
   bool isLoadingAllergies = true;
 
+  List<Map<String, dynamic>> addresses = [];
+  String? selectedAddressId;
+
+  // Для выпадающего мультиселекта аллергий
+  bool allergiesDropdownOpened = false;
+
   @override
   void initState() {
     super.initState();
     fetchAllAllergies();
     _loadUserData();
+    _loadAddresses();
   }
 
   Future<void> fetchAllAllergies() async {
@@ -60,9 +66,49 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       _photoUrl = data?['photoUrl'];
       selectedAllergies = List<String>.from(data?['allergies'] ?? []);
       hideAllergenFoods = data?['hideAllergenFoods'] ?? true;
+      selectedAddressId = data?['selectedAddressId'];
       setState(() {
         isLoading = false;
       });
+    }
+  }
+
+  Future<void> _loadAddresses() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
+    final List addressesRaw = doc.data()?['addresses'] ?? [];
+    setState(() {
+      addresses = List<Map<String, dynamic>>.from(addressesRaw);
+      // Если нет выбранного адреса, выбрать первый
+      if (addresses.isNotEmpty && selectedAddressId == null) {
+        selectedAddressId = addresses.first['id'];
+      }
+    });
+  }
+
+  Future<void> _saveProfile() async {
+    if (_formKey.currentState!.validate()) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        String? photoUrl = await _uploadAvatar(user.uid);
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .update({
+          'name': nameController.text.trim(),
+          'phone': phoneController.text.trim(),
+          'email': emailController.text.trim(),
+          'photoUrl': photoUrl,
+          'allergies': selectedAllergies,
+          'hideAllergenFoods': hideAllergenFoods,
+          'selectedAddressId': selectedAddressId,
+        });
+        Navigator.pop(context);
+      }
     }
   }
 
@@ -85,24 +131,29 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return await ref.getDownloadURL();
   }
 
-  Future<void> _saveProfile() async {
-    if (_formKey.currentState!.validate()) {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        String? photoUrl = await _uploadAvatar(user.uid);
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .update({
-          'name': nameController.text.trim(),
-          'phone': phoneController.text.trim(),
-          'email': emailController.text.trim(),
-          'photoUrl': photoUrl,
-          'allergies': selectedAllergies,
-          'hideAllergenFoods': hideAllergenFoods,
-        });
-        Navigator.pop(context);
-      }
+  // --- Новый метод для добавления адреса ---
+  Future<void> _addAddress() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => AddAddressScreen()),
+    );
+    if (result == true) {
+      await _loadAddresses();
+      setState(() {});
+    }
+  }
+
+  // --- Новый метод для выбора адреса ---
+  void _onAddressChanged(String? id) async {
+    setState(() {
+      selectedAddressId = id;
+    });
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({'selectedAddressId': id});
     }
   }
 
@@ -152,6 +203,48 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                 ),
                 SizedBox(height: 20),
+                // --- Новый выпадающий список адресов ---
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Адрес доставки',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ),
+                SizedBox(height: 10),
+                DropdownButtonFormField<String>(
+                  value: selectedAddressId,
+                  items: [
+                    ...addresses.map((address) => DropdownMenuItem<String>(
+                          value: address['id'],
+                          child: Text(address['name'] ?? 'Без названия'),
+                        )),
+                    DropdownMenuItem<String>(
+                      value: 'add_new',
+                      child: Row(
+                        children: [
+                          Icon(Icons.add, color: Colors.orange),
+                          SizedBox(width: 8),
+                          Text('Добавить адрес',
+                              style: TextStyle(color: Colors.orange)),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onChanged: (value) async {
+                    if (value == 'add_new') {
+                      await _addAddress();
+                    } else {
+                      _onAddressChanged(value);
+                    }
+                  },
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20),
                 TextFormField(
                   controller: nameController,
                   decoration: InputDecoration(labelText: 'Имя'),
@@ -196,19 +289,70 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                 ),
-                ...allAllergies.map((allergy) => CheckboxListTile(
-                      title: Text(allergy),
-                      value: selectedAllergies.contains(allergy),
-                      onChanged: (val) {
-                        setState(() {
-                          if (val == true) {
-                            selectedAllergies.add(allergy);
-                          } else {
-                            selectedAllergies.remove(allergy);
-                          }
-                        });
-                      },
-                    )),
+                SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      allergiesDropdownOpened = !allergiesDropdownOpened;
+                    });
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade400),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            selectedAllergies.isEmpty
+                                ? 'Выберите аллергии'
+                                : selectedAllergies.join(', '),
+                            style: TextStyle(
+                              color: selectedAllergies.isEmpty
+                                  ? Colors.grey
+                                  : Colors.black,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          allergiesDropdownOpened
+                              ? Icons.arrow_drop_up
+                              : Icons.arrow_drop_down,
+                          color: Colors.grey,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (allergiesDropdownOpened)
+                  Container(
+                    margin: EdgeInsets.only(bottom: 8),
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.white,
+                    ),
+                    child: Column(
+                      children: allAllergies.map((allergy) {
+                        return CheckboxListTile(
+                          title: Text(allergy),
+                          value: selectedAllergies.contains(allergy),
+                          onChanged: (val) {
+                            setState(() {
+                              if (val == true) {
+                                selectedAllergies.add(allergy);
+                              } else {
+                                selectedAllergies.remove(allergy);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
               ],
             ),
           ),

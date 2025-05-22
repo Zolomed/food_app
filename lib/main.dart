@@ -16,6 +16,12 @@ import 'screens/edit_profile_screen.dart';
 //TODO сделать динамическое отображение информации, чтоб кнопки не убегали
 //TODO сделать экран избранного для еды и ресторанов
 
+//TODO добавить что в еде
+//TODO добавить какой тип кухни в ресторанах
+//TODO добавить карточку ресторана
+//TODO добавить карточку продукта
+//TODO добавить ввод адреса
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
