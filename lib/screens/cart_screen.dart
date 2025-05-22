@@ -2,14 +2,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class PaymentScreen extends StatefulWidget {
-  const PaymentScreen({super.key});
+import 'checkout_screen.dart';
+
+class CartScreen extends StatefulWidget {
+  const CartScreen({super.key});
 
   @override
-  _PaymentScreenState createState() => _PaymentScreenState();
+  _CartScreenState createState() => _CartScreenState();
 }
 
-class _PaymentScreenState extends State<PaymentScreen> {
+class _CartScreenState extends State<CartScreen> {
   List<Map<String, dynamic>> cartItems = [];
   bool isLoading = true;
 
@@ -95,7 +97,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Text(
-          'Корзина',
+          'Корзина', // Было: 'Корзина'
           style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
@@ -239,12 +241,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       child: ElevatedButton(
                         onPressed: cartItems.isEmpty
                             ? null
-                            : () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content:
-                                          Text('Оплата успешно выполнена!')),
+                            : () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => CheckoutScreen()),
                                 );
+                                if (result == true) {
+                                  await _loadCart();
+                                }
                               },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orange,
@@ -254,7 +259,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           padding: EdgeInsets.symmetric(vertical: 15),
                         ),
                         child: Text(
-                          'Оплатить',
+                          'Далее',
                           style: TextStyle(fontSize: 18),
                         ),
                       ),

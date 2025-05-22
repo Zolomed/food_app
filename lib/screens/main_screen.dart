@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'restaurant_selection_screen.dart';
 import 'profile_screen.dart';
-import 'payment_screen.dart';
+import 'cart_screen.dart';
 import 'favorites_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -24,7 +24,7 @@ class _MainScreenState extends State<MainScreen> {
     _currentIndex = widget.initialIndex;
     _screens = [
       RestaurantSelectionScreen(),
-      PaymentScreen(),
+      CartScreen(),
       FavoritesScreen(),
       ProfileScreen(),
     ];
