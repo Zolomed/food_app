@@ -203,8 +203,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   if (value.length < 6) {
                     return 'Пароль должен быть не менее 6 символов';
                   }
-                  if (RegExp(r'[а-яА-ЯёЁ]').hasMatch(value)) {
-                    return 'Пароль не должен содержать русские буквы';
+                  if (!RegExp(
+                          r'^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]+$')
+                      .hasMatch(value)) {
+                    return 'Введите английские буквы, цифры и специальные символы';
                   }
                   return null;
                 },

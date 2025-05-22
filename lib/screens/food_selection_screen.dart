@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/menu_item.dart';
 import '../models/restaurant.dart';
-import '../widgets/food_card.dart'; // Импортируем переиспользуемый виджет
+import '../widgets/food_card.dart';
 
 class FoodSelectionScreen extends StatefulWidget {
   const FoodSelectionScreen({super.key});
@@ -39,8 +39,10 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
     setState(() {
       restaurant = rest;
       menu = rest.menu;
-      categories =
-          rest.menu.map((e) => e.category ?? 'Без категории').toSet().toList();
+      categories = [
+        'Все',
+        ...rest.menu.map((e) => e.category ?? 'Без категории').toSet().toList()
+      ];
       selectedCategory = categories.isNotEmpty ? categories[0] : '';
       isLoading = false;
     });
@@ -161,6 +163,9 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
 
     final filteredMenu = menu.where((item) {
       final hasAllergen = item.allergens.any((a) => userAllergies.contains(a));
+      if (selectedCategory == 'Все') {
+        return hideAllergenFoods ? !hasAllergen : true;
+      }
       if (hideAllergenFoods) {
         return !hasAllergen &&
             (item.category ?? 'Без категории') == selectedCategory;
@@ -218,44 +223,59 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
               },
             ),
           ),
-          // Сетка карточек еды
           Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 18,
-                crossAxisSpacing: 12,
-                childAspectRatio: 0.60,
-              ),
-              itemCount: filteredMenu.length,
-              itemBuilder: (context, index) {
-                final item = filteredMenu[index];
-                final isFavorite = _favoriteIds.contains(item.id);
-                final quantity = cartQuantities[item.id] ?? 0;
-                final containsAllergen =
-                    item.allergens.any((a) => userAllergies.contains(a));
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                const minCardWidth = 220.0;
+                final crossAxisCount =
+                    (constraints.maxWidth / minCardWidth).floor().clamp(1, 6);
 
-                return FoodCard(
-                  image: item.image,
-                  name: item.name,
-                  price: item.price.toDouble(),
-                  weight: item.weight?.toString(),
-                  isFavorite: isFavorite,
-                  quantity: quantity,
-                  onFavoriteTap: () async {
-                    await _toggleFavorite(item.id);
-                    setState(() {});
+                final spacing = 12.0;
+                final cardWidth = (constraints.maxWidth -
+                        (crossAxisCount - 1) * spacing -
+                        20) /
+                    crossAxisCount;
+                final cardHeight = 320.0;
+                final aspectRatio = cardWidth / cardHeight;
+                return GridView.builder(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    mainAxisSpacing: 18,
+                    crossAxisSpacing: spacing,
+                    childAspectRatio: aspectRatio,
+                  ),
+                  itemCount: filteredMenu.length,
+                  itemBuilder: (context, index) {
+                    final item = filteredMenu[index];
+                    final isFavorite = _favoriteIds.contains(item.id);
+                    final quantity = cartQuantities[item.id] ?? 0;
+                    final containsAllergen =
+                        item.allergens.any((a) => userAllergies.contains(a));
+
+                    return FoodCard(
+                      image: item.image,
+                      name: item.name,
+                      price: item.price.toDouble(),
+                      weight: item.weight?.toString(),
+                      isFavorite: isFavorite,
+                      quantity: quantity,
+                      onFavoriteTap: () async {
+                        await _toggleFavorite(item.id);
+                        setState(() {});
+                      },
+                      onAdd: () async {
+                        await addToCart(item);
+                        setState(() {});
+                      },
+                      onRemove: () async {
+                        await removeFromCart(item);
+                        setState(() {});
+                      },
+                      allergenWarning: !hideAllergenFoods && containsAllergen,
+                    );
                   },
-                  onAdd: () async {
-                    await addToCart(item);
-                    setState(() {});
-                  },
-                  onRemove: () async {
-                    await removeFromCart(item);
-                    setState(() {});
-                  },
-                  allergenWarning: !hideAllergenFoods && containsAllergen,
                 );
               },
             ),

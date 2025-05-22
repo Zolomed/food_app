@@ -165,47 +165,67 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     style: TextStyle(fontSize: 18, color: Colors.grey),
                   ),
                 )
-              : GridView.builder(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 18,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 0.60,
-                  ),
-                  itemCount: favoriteItems.length,
-                  itemBuilder: (context, index) {
-                    final item = favoriteItems[index];
-                    final quantity = cartQuantities[item['menuItemId']] ?? 0;
-                    final List allergens = item['allergens'] ?? [];
-                    final containsAllergen =
-                        allergens.any((a) => userAllergies.contains(a));
-                    if (hideAllergenFoods && containsAllergen) {
-                      return const SizedBox.shrink();
-                    }
-                    return FoodCard(
-                      image: item['image'] ?? '',
-                      name: item['name'] ?? '',
-                      price: (item['price'] is int)
-                          ? (item['price'] as int).toDouble()
-                          : (item['price'] ?? 0.0),
-                      weight: item['weight']?.toString(),
-                      isFavorite: true,
-                      quantity: quantity,
-                      onFavoriteTap: () async {
-                        await toggleFavorite(item['menuItemId']);
-                        setState(() {});
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Минимальная ширина карточки (подберите под ваш дизайн)
+                    const minCardWidth = 220.0;
+                    // Вычисляем количество карточек в строке
+                    final crossAxisCount = (constraints.maxWidth / minCardWidth)
+                        .floor()
+                        .clamp(1, 6);
+                    final spacing = 12.0;
+                    final cardWidth = (constraints.maxWidth -
+                            (crossAxisCount - 1) * spacing -
+                            20) /
+                        crossAxisCount;
+                    final cardHeight = 320.0;
+                    final aspectRatio = cardWidth / cardHeight;
+
+                    return GridView.builder(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 10),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        mainAxisSpacing: 18,
+                        crossAxisSpacing: spacing,
+                        childAspectRatio: aspectRatio,
+                      ),
+                      itemCount: favoriteItems.length,
+                      itemBuilder: (context, index) {
+                        final item = favoriteItems[index];
+                        final quantity =
+                            cartQuantities[item['menuItemId']] ?? 0;
+                        final List allergens = item['allergens'] ?? [];
+                        final containsAllergen =
+                            allergens.any((a) => userAllergies.contains(a));
+                        if (hideAllergenFoods && containsAllergen) {
+                          return const SizedBox.shrink();
+                        }
+                        return FoodCard(
+                          image: item['image'] ?? '',
+                          name: item['name'] ?? '',
+                          price: (item['price'] is int)
+                              ? (item['price'] as int).toDouble()
+                              : (item['price'] ?? 0.0),
+                          weight: item['weight']?.toString(),
+                          isFavorite: true,
+                          quantity: quantity,
+                          onFavoriteTap: () async {
+                            await toggleFavorite(item['menuItemId']);
+                            setState(() {});
+                          },
+                          onAdd: () async {
+                            await addToCart(item);
+                            setState(() {});
+                          },
+                          onRemove: () async {
+                            await removeFromCart(item);
+                            setState(() {});
+                          },
+                          allergenWarning:
+                              !hideAllergenFoods && containsAllergen,
+                        );
                       },
-                      onAdd: () async {
-                        await addToCart(item);
-                        setState(() {});
-                      },
-                      onRemove: () async {
-                        await removeFromCart(item);
-                        setState(() {});
-                      },
-                      allergenWarning: !hideAllergenFoods && containsAllergen,
                     );
                   },
                 ),

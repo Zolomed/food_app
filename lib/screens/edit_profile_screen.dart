@@ -144,7 +144,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         bottom: 0,
                         right: 0,
                         child: IconButton(
-                          icon: Icon(Icons.camera_alt, color: Colors.orange),
+                          icon: Icon(Icons.camera_alt, color: Colors.white),
                           onPressed: _pickAvatar,
                         ),
                       ),
@@ -179,6 +179,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   },
                 ),
                 SizedBox(height: 20),
+                SwitchListTile(
+                  title: Text('Скрывать блюда с аллергенами'),
+                  value: hideAllergenFoods,
+                  onChanged: (val) {
+                    setState(() {
+                      hideAllergenFoods = val;
+                    });
+                  },
+                ),
+                SizedBox(height: 20),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -199,17 +209,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         });
                       },
                     )),
-                SwitchListTile(
-                  title: Text('Скрывать блюда с аллергенами'),
-                  value: hideAllergenFoods,
-                  onChanged: (val) {
-                    setState(() {
-                      hideAllergenFoods = val;
-                    });
-                  },
-                ),
-                SizedBox(height: 30),
-                // Кнопка вынесена вниз экрана для удобства
               ],
             ),
           ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/restaurant.dart';
 
+//TODO реализовать
+
 class RestaurantScreen extends StatelessWidget {
   const RestaurantScreen({super.key});
 

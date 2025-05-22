@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:food_app/screens/admin_add_restaurant_screen.dart';
-import 'package:food_app/screens/edit_profile_screen.dart';
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
@@ -11,8 +9,9 @@ import 'screens/add_address_screen.dart';
 import 'screens/restaurant_screen.dart';
 import 'screens/main_screen.dart';
 import 'screens/splash_screen.dart';
+import 'screens/admin_add_restaurant_screen.dart';
+import 'screens/edit_profile_screen.dart';
 
-//TODO сделать общую тему для всего
 //TODO как то убрать кучу импортов
 //TODO сделать динамическое отображение информации, чтоб кнопки не убегали
 //TODO сделать экран избранного для еды и ресторанов
@@ -39,18 +38,18 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.white,
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            foregroundColor: Colors.white, // цвет текста
-            backgroundColor: Colors.orange, // цвет фона кнопки
+            foregroundColor: Colors.white,
+            backgroundColor: Colors.orange,
           ),
         ),
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
-            foregroundColor: Colors.white, // цвет текста для TextButton
+            foregroundColor: Colors.white,
           ),
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.white, // цвет текста для OutlinedButton
+            foregroundColor: Colors.white,
           ),
         ),
       ),
