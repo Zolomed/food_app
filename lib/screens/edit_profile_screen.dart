@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 
-import 'add_address_screen.dart'; // Импортируем экран добавления адреса
+import 'add_address_screen.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -131,7 +131,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return await ref.getDownloadURL();
   }
 
-  // --- Новый метод для добавления адреса ---
   Future<void> _addAddress() async {
     final result = await Navigator.push(
       context,
@@ -143,18 +142,39 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  // --- Новый метод для выбора адреса ---
-  void _onAddressChanged(String? id) async {
-    setState(() {
-      selectedAddressId = id;
-    });
+  Future<void> _deleteAddress(String id) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .update({'selectedAddressId': id});
+    if (user == null) return;
+    final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await docRef.get();
+    List<Map<String, dynamic>> currentAddresses =
+        List<Map<String, dynamic>>.from(doc['addresses'] ?? []);
+    currentAddresses.removeWhere((a) => a['id'] == id);
+
+    String? newSelectedId = selectedAddressId;
+    if (selectedAddressId == id) {
+      newSelectedId =
+          currentAddresses.isNotEmpty ? currentAddresses.first['id'] : null;
     }
+
+    await docRef.update({
+      'addresses': currentAddresses,
+      'selectedAddressId': newSelectedId,
+    });
+
+    setState(() {
+      addresses = currentAddresses;
+      selectedAddressId = newSelectedId;
+    });
+  }
+
+  void _showDeleteAddressHint() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Долгое нажатие по адресу — удалить адрес'),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -203,7 +223,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                 ),
                 SizedBox(height: 20),
-                // --- Новый выпадающий список адресов ---
+                // --- Выпадающий список адресов с подсказкой через snackbar и удалением по long press ---
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -217,7 +237,35 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   items: [
                     ...addresses.map((address) => DropdownMenuItem<String>(
                           value: address['id'],
-                          child: Text(address['name'] ?? 'Без названия'),
+                          child: GestureDetector(
+                            onLongPress: () async {
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: Text('Удалить адрес?'),
+                                  content: Text(
+                                      'Вы действительно хотите удалить этот адрес?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(ctx, false),
+                                      child: Text('Отмена'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                      child: Text('Удалить',
+                                          style: TextStyle(color: Colors.red)),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirm == true) {
+                                await _deleteAddress(address['id']);
+                              }
+                            },
+                            onTap: _showDeleteAddressHint,
+                            child: Text(address['name'] ?? 'Без названия'),
+                          ),
                         )),
                     DropdownMenuItem<String>(
                       value: 'add_new',
@@ -235,7 +283,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     if (value == 'add_new') {
                       await _addAddress();
                     } else {
-                      _onAddressChanged(value);
+                      setState(() {
+                        selectedAddressId = value;
+                      });
+                      _showDeleteAddressHint();
                     }
                   },
                   decoration: InputDecoration(
@@ -243,6 +294,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
+                  onTap: _showDeleteAddressHint,
                 ),
                 SizedBox(height: 20),
                 TextFormField(
