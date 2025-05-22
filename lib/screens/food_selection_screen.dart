@@ -155,6 +155,146 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
   int get totalCartCount =>
       cartQuantities.values.fold(0, (sum, qty) => sum + qty);
 
+  void _showFoodDialog(MenuItem item) {
+    final mediaQuery = MediaQuery.of(context);
+    final screenHeight = mediaQuery.size.height;
+    final screenWidth = mediaQuery.size.width;
+
+    // Рассчитываем высоту bottom sheet в зависимости от экрана (например, 60% экрана, но не менее 350 и не более 600)
+    final double minHeight = 500;
+    final double maxHeight = 600;
+    final double desiredHeight =
+        (screenHeight * 0.8).clamp(minHeight, maxHeight);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          constraints: BoxConstraints(
+            minHeight: minHeight,
+            maxHeight: desiredHeight,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: minHeight,
+                maxHeight: desiredHeight,
+              ),
+              child: IntrinsicHeight(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(height: 16),
+                    Container(
+                      width: 60,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    // Картинка на всю ширину
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(18),
+                      child: item.image.startsWith('http')
+                          ? Image.network(
+                              item.image,
+                              width: screenWidth,
+                              height: 220,
+                              fit: BoxFit.cover,
+                            )
+                          : Image.asset(
+                              item.image,
+                              width: screenWidth,
+                              height: 220,
+                              fit: BoxFit.cover,
+                            ),
+                    ),
+                    SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text(
+                        item.description ?? '',
+                        style: TextStyle(fontSize: 16),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    if ((item.ingredients ?? '').isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16.0, vertical: 12),
+                        child: Text(
+                          item.ingredients!,
+                          style: TextStyle(fontSize: 15, color: Colors.black87),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (item.weight != null && item.weight!.isNotEmpty)
+                            Text(
+                              '${item.weight} г',
+                              style: TextStyle(
+                                  fontSize: 15, color: Colors.grey[700]),
+                            ),
+                          if (item.weight != null && item.weight!.isNotEmpty)
+                            SizedBox(width: 10),
+                          Text(
+                            '${item.price} ₽',
+                            style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.orange,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            await addToCart(item);
+                            Navigator.pop(ctx);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: EdgeInsets.symmetric(vertical: 15),
+                          ),
+                          child: Text(
+                            'Добавить в корзину',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading || restaurant == null) {
@@ -235,7 +375,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                         (crossAxisCount - 1) * spacing -
                         20) /
                     crossAxisCount;
-                final cardHeight = 320.0;
+                final cardHeight = 350.0;
                 final aspectRatio = cardWidth / cardHeight;
                 return GridView.builder(
                   padding:
@@ -254,26 +394,29 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                     final containsAllergen =
                         item.allergens.any((a) => userAllergies.contains(a));
 
-                    return FoodCard(
-                      image: item.image,
-                      name: item.name,
-                      price: item.price.toDouble(),
-                      weight: item.weight?.toString(),
-                      isFavorite: isFavorite,
-                      quantity: quantity,
-                      onFavoriteTap: () async {
-                        await _toggleFavorite(item.id);
-                        setState(() {});
-                      },
-                      onAdd: () async {
-                        await addToCart(item);
-                        setState(() {});
-                      },
-                      onRemove: () async {
-                        await removeFromCart(item);
-                        setState(() {});
-                      },
-                      allergenWarning: !hideAllergenFoods && containsAllergen,
+                    return GestureDetector(
+                      onTap: () => _showFoodDialog(item),
+                      child: FoodCard(
+                        image: item.image,
+                        name: item.name,
+                        price: item.price.toDouble(),
+                        weight: item.weight?.toString(),
+                        isFavorite: isFavorite,
+                        quantity: quantity,
+                        onFavoriteTap: () async {
+                          await _toggleFavorite(item.id);
+                          setState(() {});
+                        },
+                        onAdd: () async {
+                          await addToCart(item);
+                          setState(() {});
+                        },
+                        onRemove: () async {
+                          await removeFromCart(item);
+                          setState(() {});
+                        },
+                        allergenWarning: !hideAllergenFoods && containsAllergen,
+                      ),
                     );
                   },
                 );

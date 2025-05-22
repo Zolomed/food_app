@@ -13,14 +13,10 @@ import 'screens/admin_add_restaurant_screen.dart';
 import 'screens/edit_profile_screen.dart';
 
 //TODO как то убрать кучу импортов
-//TODO сделать динамическое отображение информации, чтоб кнопки не убегали
-//TODO сделать экран избранного для еды и ресторанов
 
 //TODO добавить что в еде
-//TODO добавить какой тип кухни в ресторанах
-//TODO добавить карточку ресторана
 //TODO добавить карточку продукта
-//TODO добавить ввод адреса
+//TODO Релизовать рейтинг
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,7 +46,7 @@ class MyApp extends StatelessWidget {
         ),
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
-            foregroundColor: Colors.white,
+            foregroundColor: Colors.black,
           ),
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(

@@ -5,6 +5,7 @@ class Restaurant {
   final String name;
   final String description;
   final String image;
+  final String cuisine; // Новый параметр
   final List<MenuItem> menu;
 
   Restaurant({
@@ -12,6 +13,7 @@ class Restaurant {
     required this.name,
     required this.description,
     required this.image,
+    required this.cuisine,
     required this.menu,
   });
 
@@ -22,6 +24,7 @@ class Restaurant {
       name: map['name'] ?? '',
       description: map['description'] ?? '',
       image: map['image'] ?? '',
+      cuisine: map['cuisine'] ?? '',
       menu: menu,
     );
   }
@@ -31,6 +34,7 @@ class Restaurant {
       'name': name,
       'description': description,
       'image': image,
+      'cuisine': cuisine,
     };
   }
 }

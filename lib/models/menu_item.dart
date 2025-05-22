@@ -6,6 +6,7 @@ class MenuItem {
   final String? category;
   final String? weight;
   final String? description;
+  final String? ingredients; // Новое поле
   final List<String> allergens;
 
   MenuItem({
@@ -16,6 +17,7 @@ class MenuItem {
     this.category,
     this.weight,
     this.description,
+    this.ingredients,
     this.allergens = const [],
   });
 
@@ -28,7 +30,9 @@ class MenuItem {
       category: map['category'],
       weight: map['weight'],
       description: map['description'],
-      allergens: List<String>.from(map['allergens'] ?? []),
+      ingredients: map['ingredients'],
+      allergens:
+          map['allergens'] != null ? List<String>.from(map['allergens']) : [],
     );
   }
 
@@ -40,6 +44,7 @@ class MenuItem {
       'category': category,
       'weight': weight,
       'description': description,
+      'ingredients': ingredients,
       'allergens': allergens,
     };
   }

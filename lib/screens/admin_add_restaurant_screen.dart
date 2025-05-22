@@ -16,6 +16,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
   final _formKey = GlobalKey<FormState>();
   final nameController = TextEditingController();
   final descriptionController = TextEditingController();
+  final cuisineController = TextEditingController();
   File? _restaurantImageFile;
 
   // Для меню
@@ -25,6 +26,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
   final menuCategoryController = TextEditingController();
   final menuWeightController = TextEditingController();
   final menuDescriptionController = TextEditingController();
+  final menuIngredientsController = TextEditingController(); // Новый контроллер
   File? _menuImageFile;
   List<String> selectedMenuAllergens = [];
 
@@ -94,6 +96,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
       'category': menuCategoryController.text.trim(),
       'weight': menuWeightController.text.trim(),
       'description': menuDescriptionController.text.trim(),
+      'ingredients': menuIngredientsController.text.trim(), // Новое поле
       'allergens': selectedMenuAllergens,
     });
 
@@ -102,6 +105,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
     menuCategoryController.clear();
     menuWeightController.clear();
     menuDescriptionController.clear();
+    menuIngredientsController.clear();
     selectedMenuAllergens = [];
     _menuImageFile = null;
     setState(() => isLoading = false);
@@ -122,6 +126,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
       'name': nameController.text.trim(),
       'description': descriptionController.text.trim(),
       'image': imageUrl ?? '',
+      'cuisine': cuisineController.text.trim(),
     });
 
     for (var item in menuItems) {
@@ -134,6 +139,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
     );
     nameController.clear();
     descriptionController.clear();
+    cuisineController.clear();
     _restaurantImageFile = null;
     menuItems.clear();
     setState(() {});
@@ -177,6 +183,13 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
                           InputDecoration(labelText: 'Название ресторана'),
                       validator: (v) =>
                           v == null || v.isEmpty ? 'Введите название' : null,
+                    ),
+                    SizedBox(height: 20),
+                    TextFormField(
+                      controller: cuisineController,
+                      decoration: InputDecoration(labelText: 'Тип кухни'),
+                      validator: (v) =>
+                          v == null || v.isEmpty ? 'Введите тип кухни' : null,
                     ),
                     SizedBox(height: 20),
                     TextFormField(
@@ -238,6 +251,12 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
                     TextFormField(
                       controller: menuDescriptionController,
                       decoration: InputDecoration(labelText: 'Описание блюда'),
+                    ),
+                    SizedBox(height: 10),
+                    TextFormField(
+                      controller: menuIngredientsController,
+                      decoration:
+                          InputDecoration(labelText: 'Ингредиенты блюда'),
                     ),
                     SizedBox(height: 10),
                     Align(
