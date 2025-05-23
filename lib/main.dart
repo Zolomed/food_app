@@ -1,3 +1,4 @@
+import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -14,8 +15,6 @@ import 'screens/edit_profile_screen.dart';
 
 //TODO как то убрать кучу импортов
 
-//TODO добавить что в еде
-//TODO добавить карточку продукта
 //TODO Релизовать рейтинг
 
 void main() async {
@@ -23,6 +22,13 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  // runApp(
+  //   DevicePreview(
+  //     enabled: true,
+  //     builder: (context) => MyApp(),
+  //   ),
+  // );
+
   runApp(MyApp());
 }
 
@@ -32,8 +38,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      // useInheritedMediaQuery: true,
+      // builder: DevicePreview.appBuilder,
       debugShowCheckedModeBanner: false,
-      title: 'Food Delivery',
+      title: 'Living with food',
       theme: ThemeData(
         primarySwatch: Colors.orange,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),

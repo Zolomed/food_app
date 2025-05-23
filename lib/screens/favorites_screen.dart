@@ -178,7 +178,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                             (crossAxisCount - 1) * spacing -
                             20) /
                         crossAxisCount;
-                    final cardHeight = 320.0;
+                    final cardHeight = 380.0;
                     final aspectRatio = cardWidth / cardHeight;
 
                     return GridView.builder(

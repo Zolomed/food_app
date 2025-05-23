@@ -375,7 +375,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                         (crossAxisCount - 1) * spacing -
                         20) /
                     crossAxisCount;
-                final cardHeight = 350.0;
+                final cardHeight = 380.0;
                 final aspectRatio = cardWidth / cardHeight;
                 return GridView.builder(
                   padding:
