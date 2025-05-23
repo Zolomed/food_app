@@ -20,6 +20,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   String? selectedAddressId;
   bool isLoading = true;
 
+  // --- Добавлено: переменная для типа оплаты ---
+  String paymentType = 'card'; // 'card' или 'cash'
+
   @override
   void initState() {
     super.initState();
@@ -89,6 +92,29 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         duration: Duration(seconds: 2),
       ),
     );
+  }
+
+  Future<void> _saveOrder() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final userDoc =
+        FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await userDoc.get();
+    final cart = List<Map<String, dynamic>>.from(doc['cart'] ?? []);
+    final address = addresses.firstWhere(
+      (a) => a['id'] == selectedAddressId,
+      orElse: () => {},
+    );
+    final order = {
+      'createdAt': DateTime.now(),
+      'items': cart,
+      'address': address,
+      'paymentType': paymentType,
+      'total': cart.fold<double>(
+          0, (sum, item) => sum + (item['price'] * item['quantity'])),
+      'status': 'Оформлен',
+    };
+    await userDoc.collection('orders').add(order);
   }
 
   @override
@@ -201,6 +227,32 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           value == null ? 'Выберите адрес доставки' : null,
                       onTap: _showDeleteAddressHint,
                     ),
+                    SizedBox(height: 24),
+                    // --- Блок выбора типа оплаты (Dropdown) ---
+                    DropdownButtonFormField<String>(
+                      value: paymentType,
+                      items: [
+                        DropdownMenuItem(
+                          value: 'card',
+                          child: Text('Картой при получении'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'cash',
+                          child: Text('Наличными'),
+                        ),
+                      ],
+                      onChanged: (val) {
+                        setState(() {
+                          paymentType = val!;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Способ оплаты',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
                     SizedBox(height: 32),
                     SizedBox(
                       width: double.infinity,
@@ -218,6 +270,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             }
                             final user = FirebaseAuth.instance.currentUser;
                             if (user != null) {
+                              await _saveOrder();
                               await FirebaseFirestore.instance
                                   .collection('users')
                                   .doc(user.uid)
