@@ -141,6 +141,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     if (comment.isNotEmpty) parts.add('(${comment})');
                     addressText = parts.join(', ');
                   }
+                  // Формируем строку вида "картошка 2шт., бургер 1шт."
+                  String itemsText = items
+                      .map((i) => '${i['name']} ${i['quantity'] ?? 1}шт.')
+                      .join(', ');
                   return Card(
                     margin: EdgeInsets.symmetric(vertical: 6),
                     child: Column(
@@ -158,8 +162,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Text('Сумма: ${total.toStringAsFixed(2)} ₽'),
                               if (addressText.isNotEmpty)
                                 Text('Адрес: $addressText'),
-                              Text(
-                                  'Блюда: ${items.map((i) => i['name']).join(', ')}'),
+                              Text('Блюда: $itemsText'),
                             ],
                           ),
                         ),
