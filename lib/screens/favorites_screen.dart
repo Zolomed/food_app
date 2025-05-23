@@ -1,7 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:food_app/widgets/food_card.dart';
+import '../models/restaurant.dart';
+import '../models/menu_item.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
@@ -11,161 +12,60 @@ class FavoritesScreen extends StatefulWidget {
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
-  List<Map<String, dynamic>> favoriteItems = [];
-  Map<String, int> cartQuantities = {};
+  List<Restaurant> favoriteRestaurants = [];
   bool isLoading = true;
-  List<String> userAllergies = [];
-  bool hideAllergenFoods = true;
+  Set<String> _favoriteRestaurantIds = {};
 
   @override
   void initState() {
     super.initState();
-    _loadFavorites();
-    _loadCartQuantities();
-    _loadUserAllergies();
+    _loadFavoriteRestaurants();
   }
 
-  Future<void> _loadFavorites() async {
+  Future<void> _loadFavoriteRestaurants() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     final doc = await FirebaseFirestore.instance
         .collection('users')
         .doc(user.uid)
         .get();
-    final List<String> favoriteIds =
-        List<String>.from(doc.data()?['favorites'] ?? []);
-    List<Map<String, dynamic>> items = [];
+    final List<String> favoriteRestaurantIds =
+        List<String>.from(doc.data()?['favoriteRestaurants'] ?? []);
     final restaurantsSnapshot =
         await FirebaseFirestore.instance.collection('restaurants').get();
+    List<Restaurant> restaurants = [];
     for (final restaurantDoc in restaurantsSnapshot.docs) {
-      final menuSnapshot =
-          await restaurantDoc.reference.collection('menu').get();
-      for (final menuItemDoc in menuSnapshot.docs) {
-        if (favoriteIds.contains(menuItemDoc.id)) {
-          final data = menuItemDoc.data();
-          data['menuItemId'] = menuItemDoc.id;
-          data['restaurantId'] = restaurantDoc.id;
-          items.add(data);
-        }
+      if (favoriteRestaurantIds.contains(restaurantDoc.id)) {
+        final menuSnapshot =
+            await restaurantDoc.reference.collection('menu').get();
+        final menu = menuSnapshot.docs
+            .map((item) => MenuItem.fromMap(item.id, item.data()))
+            .toList();
+        restaurants.add(
+            Restaurant.fromMap(restaurantDoc.id, restaurantDoc.data(), menu));
       }
     }
     setState(() {
-      favoriteItems = items;
+      favoriteRestaurants = restaurants;
       isLoading = false;
+      _favoriteRestaurantIds = Set<String>.from(favoriteRestaurantIds);
     });
   }
 
-  Future<void> _loadCartQuantities() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .get();
-    final List cart =
-        List<Map<String, dynamic>>.from(doc.data()?['cart'] ?? []);
-    final Map<String, int> map = {};
-    for (var item in cart) {
-      map[item['menuItemId']] = item['quantity'];
-    }
-    setState(() {
-      cartQuantities = map;
-    });
-  }
-
-  Future<void> _loadUserAllergies() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .get();
-    setState(() {
-      userAllergies = List<String>.from(doc.data()?['allergies'] ?? []);
-      hideAllergenFoods = doc.data()?['hideAllergenFoods'] ?? true;
-    });
-  }
-
-  Future<void> toggleFavorite(String menuItemId) async {
+  Future<void> _toggleFavoriteRestaurant(String restaurantId) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
     final doc = await docRef.get();
-    List favorites = List<String>.from(doc.data()?['favorites'] ?? []);
-    if (favorites.contains(menuItemId)) {
-      favorites.remove(menuItemId);
+    List<String> favoriteRestaurants =
+        List<String>.from(doc.data()?['favoriteRestaurants'] ?? []);
+    if (favoriteRestaurants.contains(restaurantId)) {
+      favoriteRestaurants.remove(restaurantId);
     } else {
-      favorites.add(menuItemId);
+      favoriteRestaurants.add(restaurantId);
     }
-    await docRef.update({'favorites': favorites});
-    await _loadFavorites();
-  }
-
-  Future<void> addToCart(Map<String, dynamic> item) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-    final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-    final doc = await docRef.get();
-    List cart = List<Map<String, dynamic>>.from(doc.data()?['cart'] ?? []);
-    final index = cart.indexWhere((i) => i['menuItemId'] == item['menuItemId']);
-
-    // --- Проверка ресторана ---
-    final String currentRestaurantId = item['restaurantId'] ?? '';
-    if (cart.isNotEmpty) {
-      final String cartRestaurantId = cart.first['restaurantId'] ?? '';
-      if (cartRestaurantId != currentRestaurantId) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  'Можно заказывать только из одного ресторана! Очистьте корзину для нового заказа.')),
-        );
-        return;
-      }
-    }
-    // --- Конец проверки ресторана ---
-
-    int totalCount =
-        cart.fold<int>(0, (sum, i) => sum + (i['quantity'] as int));
-    if (totalCount >= 30) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Максимум 30 блюд в заказе!')),
-      );
-      return;
-    }
-
-    if (index >= 0) {
-      cart[index]['quantity'] += 1;
-    } else {
-      cart.add({
-        'menuItemId': item['menuItemId'],
-        'name': item['name'],
-        'price': item['price'],
-        'image': item['image'],
-        'weight': item['weight'],
-        'quantity': 1,
-        'restaurantId': currentRestaurantId,
-      });
-    }
-    await docRef.update({'cart': cart});
-    await _loadCartQuantities();
-  }
-
-  Future<void> removeFromCart(Map<String, dynamic> item) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-    final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-    final doc = await docRef.get();
-    List cart = List<Map<String, dynamic>>.from(doc.data()?['cart'] ?? []);
-    final index = cart.indexWhere((i) => i['menuItemId'] == item['menuItemId']);
-    if (index >= 0) {
-      if (cart[index]['quantity'] > 1) {
-        cart[index]['quantity'] -= 1;
-      } else {
-        cart.removeAt(index);
-      }
-      await docRef.update({'cart': cart});
-      await _loadCartQuantities();
-    }
+    await docRef.update({'favoriteRestaurants': favoriteRestaurants});
+    await _loadFavoriteRestaurants();
   }
 
   @override
@@ -176,85 +76,189 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Text(
-          'Избранное',
+          'Избранные рестораны',
           style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
-          : favoriteItems.isEmpty
+          : favoriteRestaurants.isEmpty
               ? Center(
                   child: Text(
-                    'Избранных блюд пока нет',
+                    'Избранных ресторанов пока нет',
                     style: TextStyle(fontSize: 18, color: Colors.grey),
                   ),
                 )
-              : LayoutBuilder(
-                  builder: (context, constraints) {
-                    const minCardWidth = 220.0;
-                    final crossAxisCount = (constraints.maxWidth / minCardWidth)
-                        .floor()
-                        .clamp(1, 6);
-                    final spacing = 12.0;
-                    final cardWidth = (constraints.maxWidth -
-                            (crossAxisCount - 1) * spacing -
-                            20) /
-                        crossAxisCount;
-                    final cardHeight = 380.0;
-                    final aspectRatio = cardWidth / cardHeight;
-
-                    return GridView.builder(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 10),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        mainAxisSpacing: 18,
-                        crossAxisSpacing: spacing,
-                        childAspectRatio: aspectRatio,
-                      ),
-                      itemCount: favoriteItems.length,
-                      itemBuilder: (context, index) {
-                        final item = favoriteItems[index];
-                        final quantity =
-                            cartQuantities[item['menuItemId']] ?? 0;
-                        final List allergens = item['allergens'] ?? [];
-                        final containsAllergen =
-                            allergens.any((a) => userAllergies.contains(a));
-                        if (hideAllergenFoods && containsAllergen) {
-                          return const SizedBox.shrink();
-                        }
-                        return FoodCard(
-                          image: item['image'] ?? '',
-                          name: item['name'] ?? '',
-                          price: (item['price'] is int)
-                              ? (item['price'] as int).toDouble()
-                              : (item['price'] ?? 0.0),
-                          weight: item['weight']?.toString(),
-                          isFavorite: true,
-                          quantity: quantity,
-                          onFavoriteTap: () async {
-                            await toggleFavorite(item['menuItemId']);
-                            setState(() {});
-                          },
-                          onAdd: () async {
-                            await addToCart(item);
-                            setState(() {});
-                          },
-                          onRemove: () async {
-                            await removeFromCart(item);
-                            setState(() {});
-                          },
-                          allergenWarning:
-                              !hideAllergenFoods && containsAllergen,
-                          isTotalLimit: cartQuantities.values
-                                  .fold(0, (sum, qty) => sum + qty) >=
-                              30,
-                        );
+              : ListView.builder(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  itemCount: favoriteRestaurants.length,
+                  itemBuilder: (context, index) {
+                    final restaurant = favoriteRestaurants[index];
+                    final isFavorite =
+                        _favoriteRestaurantIds.contains(restaurant.id);
+                    return _RestaurantCard(
+                      restaurant: restaurant,
+                      fixedHeight: 250,
+                      isFavorite: isFavorite,
+                      onFavoriteTap: () async {
+                        await _toggleFavoriteRestaurant(restaurant.id);
                       },
                     );
                   },
                 ),
+    );
+  }
+}
+
+class _RestaurantCard extends StatelessWidget {
+  final Restaurant restaurant;
+  final double fixedHeight;
+  final bool isFavorite;
+  final VoidCallback onFavoriteTap;
+  const _RestaurantCard({
+    required this.restaurant,
+    required this.fixedHeight,
+    required this.isFavorite,
+    required this.onFavoriteTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cuisine =
+        restaurant.cuisine.isNotEmpty ? restaurant.cuisine : 'Не указано';
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 24),
+      child: Material(
+        elevation: 2,
+        borderRadius: BorderRadius.circular(28),
+        color: Colors.white,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(28),
+          onTap: () {
+            Navigator.pushNamed(
+              context,
+              '/food_selection',
+              arguments: restaurant,
+            );
+          },
+          child: SizedBox(
+            height: fixedHeight,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(28)),
+                      child: restaurant.image.startsWith('http')
+                          ? Image.network(
+                              restaurant.image,
+                              width: double.infinity,
+                              height: 140,
+                              fit: BoxFit.cover,
+                            )
+                          : Image.asset(
+                              restaurant.image,
+                              width: double.infinity,
+                              height: 140,
+                              fit: BoxFit.cover,
+                            ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: IconButton(
+                        icon: Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorite ? Colors.red : Colors.grey,
+                          size: 28,
+                        ),
+                        tooltip: isFavorite
+                            ? 'Убрать ресторан из избранного'
+                            : 'Добавить ресторан в избранное',
+                        onPressed: onFavoriteTap,
+                      ),
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                restaurant.name,
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.info_outline,
+                                  color: Colors.orange),
+                              tooltip: 'Информация о ресторане',
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: Text(restaurant.name),
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        if (restaurant.description.isNotEmpty)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                                bottom: 8.0),
+                                            child: Text(
+                                              restaurant.description,
+                                              style: TextStyle(fontSize: 15),
+                                            ),
+                                          ),
+                                        Text('Кухня: $cuisine'),
+                                        SizedBox(height: 4),
+                                      ],
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(ctx),
+                                        child: Text('Закрыть'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                        Text(
+                          cuisine,
+                          style: TextStyle(color: Colors.black87, fontSize: 14),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Spacer(),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

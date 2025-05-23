@@ -13,7 +13,7 @@ class FoodSelectionScreen extends StatefulWidget {
 }
 
 class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
-  Set<String> _favoriteIds = {};
+  Set<String> _favoriteMenuIds = {};
   bool isLoading = true;
   bool _isInit = false;
   String selectedCategory = '';
@@ -23,6 +23,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
   Map<String, int> cartQuantities = {};
   List<String> userAllergies = [];
   bool hideAllergenFoods = true;
+  bool isRestaurantFavorite = false;
 
   String _searchQuery = ''; // Для поиска по блюдам
 
@@ -48,9 +49,10 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
       selectedCategory = categories.isNotEmpty ? categories[0] : '';
       isLoading = false;
     });
-    await _loadFavorites();
+    await _loadFavoriteMenu();
     await _loadCartQuantities();
     await _loadUserAllergies();
+    await _loadFavoriteRestaurant();
   }
 
   Future<void> _loadUserAllergies() async {
@@ -66,15 +68,70 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
     });
   }
 
-  Future<void> _loadFavorites() async {
+  Future<void> _loadFavoriteMenu() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    if (user == null || restaurant == null) return;
     final doc = await FirebaseFirestore.instance
         .collection('users')
         .doc(user.uid)
         .get();
+    final Map<String, dynamic> favoriteMenus =
+        Map<String, dynamic>.from(doc.data()?['favoriteMenus'] ?? {});
+    final Set<String> menuIds =
+        Set<String>.from(favoriteMenus[restaurant!.id] ?? []);
     setState(() {
-      _favoriteIds = Set<String>.from(doc.data()?['favorites'] ?? []);
+      _favoriteMenuIds = menuIds;
+    });
+  }
+
+  Future<void> _toggleFavoriteMenu(String menuItemId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || restaurant == null) return;
+    final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await docRef.get();
+    Map<String, dynamic> favoriteMenus =
+        Map<String, dynamic>.from(doc.data()?['favoriteMenus'] ?? {});
+    List<String> menuIds =
+        List<String>.from(favoriteMenus[restaurant!.id] ?? []);
+    if (menuIds.contains(menuItemId)) {
+      menuIds.remove(menuItemId);
+    } else {
+      menuIds.add(menuItemId);
+    }
+    favoriteMenus[restaurant!.id] = menuIds;
+    await docRef.update({'favoriteMenus': favoriteMenus});
+    await _loadFavoriteMenu();
+  }
+
+  Future<void> _loadFavoriteRestaurant() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || restaurant == null) return;
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
+    final List<String> favoriteRestaurants =
+        List<String>.from(doc.data()?['favoriteRestaurants'] ?? []);
+    setState(() {
+      isRestaurantFavorite = favoriteRestaurants.contains(restaurant!.id);
+    });
+  }
+
+  Future<void> _toggleFavoriteRestaurant() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || restaurant == null) return;
+    final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await docRef.get();
+    List<String> favoriteRestaurants =
+        List<String>.from(doc.data()?['favoriteRestaurants'] ?? []);
+    if (favoriteRestaurants.contains(restaurant!.id)) {
+      favoriteRestaurants.remove(restaurant!.id);
+    } else {
+      favoriteRestaurants.add(restaurant!.id);
+    }
+    await docRef.update({'favoriteRestaurants': favoriteRestaurants});
+    setState(() {
+      isRestaurantFavorite = favoriteRestaurants.contains(restaurant!.id);
     });
   }
 
@@ -93,23 +150,6 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
     }
     setState(() {
       cartQuantities = map;
-    });
-  }
-
-  Future<void> _toggleFavorite(String menuItemId) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-    final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-    final doc = await docRef.get();
-    List favorites = List<String>.from(doc.data()?['favorites'] ?? []);
-    if (favorites.contains(menuItemId)) {
-      favorites.remove(menuItemId);
-    } else {
-      favorites.add(menuItemId);
-    }
-    await docRef.update({'favorites': favorites});
-    setState(() {
-      _favoriteIds = Set<String>.from(favorites);
     });
   }
 
@@ -360,11 +400,25 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
       return Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    // Категории: "Все", "Избранное", остальные
+    final List<String> displayCategories = [
+      'Все',
+      'Избранное',
+      ...categories.where((c) => c != 'Все' && c != 'Избранное')
+    ];
+
+    // Фильтрация меню по выбранной категории
     final filteredMenu = menu.where((item) {
       final hasAllergen = item.allergens.any((a) => userAllergies.contains(a));
-      final matchesCategory = selectedCategory == 'Все'
-          ? true
-          : (item.category ?? 'Без категории') == selectedCategory;
+      bool matchesCategory;
+      if (selectedCategory == 'Все') {
+        matchesCategory = true;
+      } else if (selectedCategory == 'Избранное') {
+        matchesCategory = _favoriteMenuIds.contains(item.id);
+      } else {
+        matchesCategory =
+            (item.category ?? 'Без категории') == selectedCategory;
+      }
       final matchesSearch = _searchQuery.isEmpty
           ? true
           : (item.name.toLowerCase().contains(_searchQuery) ||
@@ -380,9 +434,25 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text(
-          restaurant!.name,
-          style: TextStyle(color: Colors.black),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                restaurant!.name,
+                style: TextStyle(color: Colors.black),
+              ),
+            ),
+            IconButton(
+              icon: Icon(
+                isRestaurantFavorite ? Icons.favorite : Icons.favorite_border,
+                color: isRestaurantFavorite ? Colors.red : Colors.grey,
+              ),
+              tooltip: isRestaurantFavorite
+                  ? 'Убрать ресторан из избранного'
+                  : 'Добавить ресторан в избранное',
+              onPressed: _toggleFavoriteRestaurant,
+            ),
+          ],
         ),
         centerTitle: true,
       ),
@@ -413,9 +483,9 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
             height: 50,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              itemCount: categories.length,
+              itemCount: displayCategories.length,
               itemBuilder: (context, idx) {
-                final cat = categories[idx];
+                final cat = displayCategories[idx];
                 final selected = cat == selectedCategory;
                 return GestureDetector(
                   onTap: () {
@@ -470,7 +540,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                   itemCount: filteredMenu.length,
                   itemBuilder: (context, index) {
                     final item = filteredMenu[index];
-                    final isFavorite = _favoriteIds.contains(item.id);
+                    final isFavorite = _favoriteMenuIds.contains(item.id);
                     final quantity = cartQuantities[item.id] ?? 0;
                     final containsAllergen =
                         item.allergens.any((a) => userAllergies.contains(a));
@@ -485,7 +555,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                         isFavorite: isFavorite,
                         quantity: quantity,
                         onFavoriteTap: () async {
-                          await _toggleFavorite(item.id);
+                          await _toggleFavoriteMenu(item.id);
                           setState(() {});
                         },
                         onAdd: () async {

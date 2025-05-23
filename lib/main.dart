@@ -15,7 +15,7 @@ import 'screens/edit_profile_screen.dart';
 
 //TODO как то убрать кучу импортов
 
-//TODO Релизовать рейтинг
+//TODO реализовать рейтинг
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

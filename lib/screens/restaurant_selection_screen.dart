@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/restaurant.dart';
 import '../models/menu_item.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class RestaurantSelectionScreen extends StatefulWidget {
   const RestaurantSelectionScreen({super.key});
@@ -14,11 +15,13 @@ class RestaurantSelectionScreen extends StatefulWidget {
 class _RestaurantSelectionScreenState extends State<RestaurantSelectionScreen> {
   late Future<List<Restaurant>> _futureRestaurants;
   String _searchQuery = '';
+  Set<String> _favoriteRestaurantIds = {};
 
   @override
   void initState() {
     super.initState();
     _futureRestaurants = fetchRestaurants();
+    _loadFavoriteRestaurants();
   }
 
   Future<List<Restaurant>> fetchRestaurants() async {
@@ -33,6 +36,35 @@ class _RestaurantSelectionScreenState extends State<RestaurantSelectionScreen> {
       restaurants.add(Restaurant.fromMap(doc.id, doc.data(), menu));
     }
     return restaurants;
+  }
+
+  Future<void> _loadFavoriteRestaurants() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
+    setState(() {
+      _favoriteRestaurantIds =
+          Set<String>.from(doc.data()?['favoriteRestaurants'] ?? []);
+    });
+  }
+
+  Future<void> _toggleFavoriteRestaurant(String restaurantId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await docRef.get();
+    List<String> favoriteRestaurants =
+        List<String>.from(doc.data()?['favoriteRestaurants'] ?? []);
+    if (favoriteRestaurants.contains(restaurantId)) {
+      favoriteRestaurants.remove(restaurantId);
+    } else {
+      favoriteRestaurants.add(restaurantId);
+    }
+    await docRef.update({'favoriteRestaurants': favoriteRestaurants});
+    await _loadFavoriteRestaurants();
   }
 
   @override
@@ -116,9 +148,15 @@ class _RestaurantSelectionScreenState extends State<RestaurantSelectionScreen> {
                         itemCount: restaurants.length,
                         itemBuilder: (context, index) {
                           final restaurant = restaurants[index];
+                          final isFavorite =
+                              _favoriteRestaurantIds.contains(restaurant.id);
                           return _RestaurantCard(
                             restaurant: restaurant,
                             fixedHeight: cardHeight,
+                            isFavorite: isFavorite,
+                            onFavoriteTap: () async {
+                              await _toggleFavoriteRestaurant(restaurant.id);
+                            },
                           );
                         },
                       );
@@ -129,9 +167,15 @@ class _RestaurantSelectionScreenState extends State<RestaurantSelectionScreen> {
                         itemCount: restaurants.length,
                         itemBuilder: (context, index) {
                           final restaurant = restaurants[index];
+                          final isFavorite =
+                              _favoriteRestaurantIds.contains(restaurant.id);
                           return _RestaurantCard(
                             restaurant: restaurant,
                             fixedHeight: 250,
+                            isFavorite: isFavorite,
+                            onFavoriteTap: () async {
+                              await _toggleFavoriteRestaurant(restaurant.id);
+                            },
                           );
                         },
                       );
@@ -150,9 +194,13 @@ class _RestaurantSelectionScreenState extends State<RestaurantSelectionScreen> {
 class _RestaurantCard extends StatelessWidget {
   final Restaurant restaurant;
   final double fixedHeight;
+  final bool isFavorite;
+  final VoidCallback onFavoriteTap;
   const _RestaurantCard({
     required this.restaurant,
     required this.fixedHeight,
+    required this.isFavorite,
+    required this.onFavoriteTap,
   });
 
   @override
@@ -180,21 +228,41 @@ class _RestaurantCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-                  child: restaurant.image.startsWith('http')
-                      ? Image.network(
-                          restaurant.image,
-                          width: double.infinity,
-                          height: 140,
-                          fit: BoxFit.cover,
-                        )
-                      : Image.asset(
-                          restaurant.image,
-                          width: double.infinity,
-                          height: 140,
-                          fit: BoxFit.cover,
+                Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(28)),
+                      child: restaurant.image.startsWith('http')
+                          ? Image.network(
+                              restaurant.image,
+                              width: double.infinity,
+                              height: 140,
+                              fit: BoxFit.cover,
+                            )
+                          : Image.asset(
+                              restaurant.image,
+                              width: double.infinity,
+                              height: 140,
+                              fit: BoxFit.cover,
+                            ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: IconButton(
+                        icon: Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorite ? Colors.red : Colors.grey,
+                          size: 28,
                         ),
+                        tooltip: isFavorite
+                            ? 'Убрать ресторан из избранного'
+                            : 'Добавить ресторан в избранное',
+                        onPressed: onFavoriteTap,
+                      ),
+                    ),
+                  ],
                 ),
                 Expanded(
                   child: Padding(
