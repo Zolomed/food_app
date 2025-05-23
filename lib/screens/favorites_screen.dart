@@ -35,7 +35,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     final List<String> favoriteIds =
         List<String>.from(doc.data()?['favorites'] ?? []);
     List<Map<String, dynamic>> items = [];
-    // Получаем блюда по id из всех ресторанов
     final restaurantsSnapshot =
         await FirebaseFirestore.instance.collection('restaurants').get();
     for (final restaurantDoc in restaurantsSnapshot.docs) {
@@ -109,6 +108,31 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     final doc = await docRef.get();
     List cart = List<Map<String, dynamic>>.from(doc.data()?['cart'] ?? []);
     final index = cart.indexWhere((i) => i['menuItemId'] == item['menuItemId']);
+
+    // --- Проверка ресторана ---
+    final String currentRestaurantId = item['restaurantId'] ?? '';
+    if (cart.isNotEmpty) {
+      final String cartRestaurantId = cart.first['restaurantId'] ?? '';
+      if (cartRestaurantId != currentRestaurantId) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Можно заказывать только из одного ресторана! Очистьте корзину для нового заказа.')),
+        );
+        return;
+      }
+    }
+    // --- Конец проверки ресторана ---
+
+    int totalCount =
+        cart.fold<int>(0, (sum, i) => sum + (i['quantity'] as int));
+    if (totalCount >= 30) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Максимум 30 блюд в заказе!')),
+      );
+      return;
+    }
+
     if (index >= 0) {
       cart[index]['quantity'] += 1;
     } else {
@@ -119,6 +143,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         'image': item['image'],
         'weight': item['weight'],
         'quantity': 1,
+        'restaurantId': currentRestaurantId,
       });
     }
     await docRef.update({'cart': cart});
@@ -167,9 +192,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 )
               : LayoutBuilder(
                   builder: (context, constraints) {
-                    // Минимальная ширина карточки (подберите под ваш дизайн)
                     const minCardWidth = 220.0;
-                    // Вычисляем количество карточек в строке
                     final crossAxisCount = (constraints.maxWidth / minCardWidth)
                         .floor()
                         .clamp(1, 6);
@@ -224,6 +247,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                           },
                           allergenWarning:
                               !hideAllergenFoods && containsAllergen,
+                          isTotalLimit: cartQuantities.values
+                                  .fold(0, (sum, qty) => sum + qty) >=
+                              30,
                         );
                       },
                     );

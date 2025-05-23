@@ -121,6 +121,21 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
     List cart = List<Map<String, dynamic>>.from(doc.data()?['cart'] ?? []);
     final index = cart.indexWhere((i) => i['menuItemId'] == item.id);
 
+    // --- Проверка ресторана ---
+    final String currentRestaurantId = restaurant?.id ?? '';
+    if (cart.isNotEmpty) {
+      final String cartRestaurantId = cart.first['restaurantId'] ?? '';
+      if (cartRestaurantId != currentRestaurantId) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Можно заказывать только из одного ресторана! Очистьте корзину для нового заказа.')),
+        );
+        return;
+      }
+    }
+    // --- Конец проверки ресторана ---
+
     // Проверка на общее количество
     int totalCount =
         cart.fold<int>(0, (sum, i) => sum + (i['quantity'] as int));
@@ -141,6 +156,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
         'image': item.image,
         'weight': item.weight,
         'quantity': 1,
+        'restaurantId': currentRestaurantId,
       });
     }
     await docRef.update({'cart': cart});
@@ -173,7 +189,6 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
     final screenHeight = mediaQuery.size.height;
     final screenWidth = mediaQuery.size.width;
 
-    // Рассчитываем высоту bottom sheet в зависимости от экрана (например, 60% экрана, но не менее 350 и не более 600)
     final double minHeight = 500;
     final double maxHeight = 600;
     final double desiredHeight =
@@ -213,7 +228,6 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                       ),
                     ),
                     SizedBox(height: 16),
-                    // Картинка на всю ширину
                     ClipRRect(
                       borderRadius: BorderRadius.circular(18),
                       child: item.image.startsWith('http')
@@ -280,6 +294,28 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () async {
+                            final user = FirebaseAuth.instance.currentUser;
+                            if (user == null) return;
+                            final doc = await FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(user.uid)
+                                .get();
+                            List cart = List<Map<String, dynamic>>.from(
+                                doc.data()?['cart'] ?? []);
+                            final String currentRestaurantId =
+                                restaurant?.id ?? '';
+                            if (cart.isNotEmpty) {
+                              final String cartRestaurantId =
+                                  cart.first['restaurantId'] ?? '';
+                              if (cartRestaurantId != currentRestaurantId) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text(
+                                          'Можно заказывать только из одного ресторана! Очистьте корзину для нового заказа.')),
+                                );
+                                return;
+                              }
+                            }
                             int totalCount = cartQuantities.values
                                 .fold(0, (sum, qty) => sum + qty);
                             if (totalCount >= 30) {
@@ -324,7 +360,6 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
       return Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    // --- Фильтрация по поиску и категории ---
     final filteredMenu = menu.where((item) {
       final hasAllergen = item.allergens.any((a) => userAllergies.contains(a));
       final matchesCategory = selectedCategory == 'Все'
@@ -354,7 +389,6 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // --- Поиск по еде ---
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: TextField(
@@ -375,7 +409,6 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
             ),
           ),
           SizedBox(height: 8),
-          // --- Категории ---
           SizedBox(
             height: 50,
             child: ListView.builder(
@@ -456,6 +489,28 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                           setState(() {});
                         },
                         onAdd: () async {
+                          final user = FirebaseAuth.instance.currentUser;
+                          if (user == null) return;
+                          final doc = await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(user.uid)
+                              .get();
+                          List cart = List<Map<String, dynamic>>.from(
+                              doc.data()?['cart'] ?? []);
+                          final String currentRestaurantId =
+                              restaurant?.id ?? '';
+                          if (cart.isNotEmpty) {
+                            final String cartRestaurantId =
+                                cart.first['restaurantId'] ?? '';
+                            if (cartRestaurantId != currentRestaurantId) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(
+                                        'Можно заказывать только из одного ресторана! Очистьте корзину для нового заказа.')),
+                              );
+                              return;
+                            }
+                          }
                           int totalCount = cartQuantities.values
                               .fold(0, (sum, qty) => sum + qty);
                           if (totalCount >= 30) {

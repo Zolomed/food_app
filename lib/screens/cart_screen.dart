@@ -46,6 +46,21 @@ class _CartScreenState extends State<CartScreen> {
     final index =
         cart.indexWhere((item) => item['menuItemId'] == menuItem['menuItemId']);
 
+    // --- Проверка ресторана ---
+    final String currentRestaurantId = menuItem['restaurantId'] ?? '';
+    if (cart.isNotEmpty) {
+      final String cartRestaurantId = cart.first['restaurantId'] ?? '';
+      if (cartRestaurantId != currentRestaurantId) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Можно заказывать только из одного ресторана! Очистьте корзину для нового заказа.')),
+        );
+        return;
+      }
+    }
+    // --- Конец проверки ресторана ---
+
     // Проверка на общее количество
     int totalCount =
         cart.fold<int>(0, (sum, i) => sum + (i['quantity'] as int));
