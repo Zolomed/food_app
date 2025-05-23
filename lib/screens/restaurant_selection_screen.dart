@@ -131,7 +131,7 @@ class _RestaurantSelectionScreenState extends State<RestaurantSelectionScreen> {
                           final restaurant = restaurants[index];
                           return _RestaurantCard(
                             restaurant: restaurant,
-                            fixedHeight: 300,
+                            fixedHeight: 250,
                           );
                         },
                       );
@@ -157,7 +157,6 @@ class _RestaurantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rating = 4.8;
     final cuisine =
         restaurant.cuisine.isNotEmpty ? restaurant.cuisine : 'Не указано';
 
@@ -241,7 +240,6 @@ class _RestaurantCard extends StatelessWidget {
                                           ),
                                         Text('Кухня: $cuisine'),
                                         SizedBox(height: 4),
-                                        Text('Рейтинг: $rating'),
                                       ],
                                     ),
                                     actions: [
@@ -256,19 +254,6 @@ class _RestaurantCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                        SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Icon(Icons.star, size: 16, color: Colors.orange),
-                            SizedBox(width: 4),
-                            Text(
-                              rating.toString(),
-                              style: TextStyle(
-                                  fontSize: 14, color: Colors.black87),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 6),
                         Text(
                           cuisine,
                           style: TextStyle(color: Colors.black87, fontSize: 14),
