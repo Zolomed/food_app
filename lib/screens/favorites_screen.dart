@@ -90,22 +90,66 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     style: TextStyle(fontSize: 18, color: Colors.grey),
                   ),
                 )
-              : ListView.builder(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  itemCount: favoriteRestaurants.length,
-                  itemBuilder: (context, index) {
-                    final restaurant = favoriteRestaurants[index];
-                    final isFavorite =
-                        _favoriteRestaurantIds.contains(restaurant.id);
-                    return _RestaurantCard(
-                      restaurant: restaurant,
-                      fixedHeight: 250,
-                      isFavorite: isFavorite,
-                      onFavoriteTap: () async {
-                        await _toggleFavoriteRestaurant(restaurant.id);
-                      },
-                    );
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    if (constraints.maxWidth > 700) {
+                      const minCardWidth = 340.0;
+                      final crossAxisCount =
+                          (constraints.maxWidth / minCardWidth)
+                              .floor()
+                              .clamp(2, 6);
+                      final spacing = 24.0;
+                      final cardWidth = (constraints.maxWidth -
+                              (crossAxisCount - 1) * spacing -
+                              32) /
+                          crossAxisCount;
+                      final cardHeight = 300.0;
+                      final aspectRatio = cardWidth / cardHeight;
+
+                      return GridView.builder(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 16),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          mainAxisSpacing: spacing,
+                          crossAxisSpacing: spacing,
+                          childAspectRatio: aspectRatio,
+                        ),
+                        itemCount: favoriteRestaurants.length,
+                        itemBuilder: (context, index) {
+                          final restaurant = favoriteRestaurants[index];
+                          final isFavorite =
+                              _favoriteRestaurantIds.contains(restaurant.id);
+                          return _RestaurantCard(
+                            restaurant: restaurant,
+                            fixedHeight: cardHeight,
+                            isFavorite: isFavorite,
+                            onFavoriteTap: () async {
+                              await _toggleFavoriteRestaurant(restaurant.id);
+                            },
+                          );
+                        },
+                      );
+                    } else {
+                      return ListView.builder(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 16),
+                        itemCount: favoriteRestaurants.length,
+                        itemBuilder: (context, index) {
+                          final restaurant = favoriteRestaurants[index];
+                          final isFavorite =
+                              _favoriteRestaurantIds.contains(restaurant.id);
+                          return _RestaurantCard(
+                            restaurant: restaurant,
+                            fixedHeight: 250,
+                            isFavorite: isFavorite,
+                            onFavoriteTap: () async {
+                              await _toggleFavoriteRestaurant(restaurant.id);
+                            },
+                          );
+                        },
+                      );
+                    }
                   },
                 ),
     );
