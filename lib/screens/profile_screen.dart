@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:food_app/models/app_user.dart';
 import 'package:intl/intl.dart';
+import 'main_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -40,6 +41,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Navigator.pushReplacementNamed(context, '/');
   }
 
+  Future<void> _repeatOrderAndGoToCart(
+      List<dynamic> items, String restaurantId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+    // Очищаем корзину
+    await docRef.update({'cart': []});
+
+    // Проверка на общее количество
+    int totalCount =
+        items.fold<int>(0, (sum, i) => sum + (i['quantity'] as int? ?? 1));
+    if (totalCount > 30) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Максимум 30 блюд в заказе!')),
+      );
+      return;
+    }
+
+    // Формируем новую корзину
+    List<Map<String, dynamic>> newCart = [];
+    for (var item in items) {
+      newCart.add({
+        'menuItemId': item['menuItemId'],
+        'name': item['name'],
+        'price': item['price'],
+        'image': item['image'],
+        'weight': item['weight'],
+        'quantity': item['quantity'],
+        'restaurantId': restaurantId,
+      });
+    }
+    await docRef.update({'cart': newCart});
+
+    // Переход на MainScreen с открытой вкладкой корзины
+    if (mounted) {
+      Navigator.pop(context); // Закрыть диалог заказов
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MainScreen(initialIndex: 1),
+        ),
+      );
+    }
+  }
+
   void _showOrdersDialog() {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -74,9 +121,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   final payment = order['paymentType'] ?? '';
                   final status = order['status'] ?? '';
                   final address = order['address'];
+                  final restaurantId = order['restaurantId'] ?? '';
                   String addressText = '';
                   if (address != null) {
-                    // Собираем полный адрес из полей
                     final city = address['city'] ?? '';
                     final street = address['street'] ?? '';
                     final house = address['house'] ?? '';
@@ -96,22 +143,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   }
                   return Card(
                     margin: EdgeInsets.symmetric(vertical: 6),
-                    child: ListTile(
-                      title: Text(
-                          'Заказ от ${DateFormat('dd.MM.yyyy HH:mm').format(date)}'),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Статус: $status'),
-                          Text(
-                              'Оплата: ${payment == 'card' ? 'Картой при получении' : 'Наличными'}'),
-                          Text('Сумма: ${total.toStringAsFixed(2)} ₽'),
-                          if (addressText.isNotEmpty)
-                            Text('Адрес: $addressText'),
-                          Text(
-                              'Блюда: ${items.map((i) => i['name']).join(', ')}'),
-                        ],
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        ListTile(
+                          title: Text(
+                              'Заказ от ${DateFormat('dd.MM.yyyy HH:mm').format(date)}'),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Статус: $status'),
+                              Text(
+                                  'Оплата: ${payment == 'card' ? 'Картой при получении' : 'Наличными'}'),
+                              Text('Сумма: ${total.toStringAsFixed(2)} ₽'),
+                              if (addressText.isNotEmpty)
+                                Text('Адрес: $addressText'),
+                              Text(
+                                  'Блюда: ${items.map((i) => i['name']).join(', ')}'),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          child: ElevatedButton.icon(
+                            icon: Icon(Icons.refresh, size: 18),
+                            label: Text('Повторить заказ',
+                                style: TextStyle(fontSize: 15)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            onPressed: () async {
+                              await _repeatOrderAndGoToCart(
+                                  items, restaurantId);
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 },
