@@ -122,6 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   final status = order['status'] ?? '';
                   final address = order['address'];
                   final restaurantId = order['restaurantId'] ?? '';
+                  final deliveryTime = order['deliveryTime'];
                   String addressText = '';
                   if (address != null) {
                     final city = address['city'] ?? '';
@@ -156,6 +157,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              if (deliveryTime != null &&
+                                  deliveryTime.toString().isNotEmpty)
+                                Text('Доставить ко времени: $deliveryTime'),
                               Text('Статус: $status'),
                               Text(
                                   'Оплата: ${payment == 'card' ? 'Картой при получении' : 'Наличными'}'),

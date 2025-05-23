@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import 'add_address_screen.dart';
 
@@ -20,8 +21,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   String? selectedAddressId;
   bool isLoading = true;
 
-  // --- Добавлено: переменная для типа оплаты ---
   String paymentType = 'card'; // 'card' или 'cash'
+
+  // --- Новое: переменная для времени доставки ---
+  TimeOfDay? selectedTime;
 
   @override
   void initState() {
@@ -105,6 +108,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       (a) => a['id'] == selectedAddressId,
       orElse: () => {},
     );
+    // --- Новое: сохраняем время доставки ---
+    String? deliveryTime;
+    if (selectedTime != null) {
+      final now = DateTime.now();
+      final dt = DateTime(now.year, now.month, now.day, selectedTime!.hour,
+          selectedTime!.minute);
+      deliveryTime = DateFormat('HH:mm').format(dt);
+    }
     final order = {
       'createdAt': DateTime.now(),
       'items': cart,
@@ -113,8 +124,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       'total': cart.fold<double>(
           0, (sum, item) => sum + (item['price'] * item['quantity'])),
       'status': 'Оформлен',
+      'deliveryTime': deliveryTime, // Новое поле
     };
     await userDoc.collection('orders').add(order);
+  }
+
+  Future<void> _pickTime() async {
+    final now = TimeOfDay.now();
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: selectedTime ?? now,
+      helpText: 'Выберите время доставки',
+    );
+    if (picked != null) {
+      setState(() {
+        selectedTime = picked;
+      });
+    }
   }
 
   @override
@@ -227,7 +253,44 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           value == null ? 'Выберите адрес доставки' : null,
                       onTap: _showDeleteAddressHint,
                     ),
-                    SizedBox(height: 24),
+                    SizedBox(height: 16),
+                    // --- Новый блок выбора времени доставки ---
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InputDecorator(
+                            decoration: InputDecoration(
+                              labelText: 'Время доставки',
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
+                            child: InkWell(
+                              onTap: _pickTime,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 4),
+                                child: Text(
+                                  selectedTime != null
+                                      ? 'Ко времени: ${selectedTime!.format(context)}'
+                                      : 'Выберите время',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: selectedTime != null
+                                        ? Colors.black
+                                        : Colors.grey[600],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.access_time, color: Colors.orange),
+                          onPressed: _pickTime,
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 16),
                     // --- Блок выбора типа оплаты (Dropdown) ---
                     DropdownButtonFormField<String>(
                       value: paymentType,
