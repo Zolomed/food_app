@@ -120,6 +120,17 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
     final doc = await docRef.get();
     List cart = List<Map<String, dynamic>>.from(doc.data()?['cart'] ?? []);
     final index = cart.indexWhere((i) => i['menuItemId'] == item.id);
+
+    // Проверка на общее количество
+    int totalCount =
+        cart.fold<int>(0, (sum, i) => sum + (i['quantity'] as int));
+    if (totalCount >= 30) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Максимум 30 блюд в заказе!')),
+      );
+      return;
+    }
+
     if (index >= 0) {
       cart[index]['quantity'] += 1;
     } else {
@@ -269,6 +280,16 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () async {
+                            int totalCount = cartQuantities.values
+                                .fold(0, (sum, qty) => sum + qty);
+                            if (totalCount >= 30) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content:
+                                        Text('Максимум 30 блюд в заказе!')),
+                              );
+                              return;
+                            }
                             await addToCart(item);
                             Navigator.pop(ctx);
                           },
@@ -316,6 +337,9 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
       if (hideAllergenFoods && hasAllergen) return false;
       return matchesCategory && matchesSearch;
     }).toList();
+
+    final int totalCount =
+        cartQuantities.values.fold(0, (sum, qty) => sum + qty);
 
     return Scaffold(
       appBar: AppBar(
@@ -432,6 +456,15 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                           setState(() {});
                         },
                         onAdd: () async {
+                          int totalCount = cartQuantities.values
+                              .fold(0, (sum, qty) => sum + qty);
+                          if (totalCount >= 30) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text('Максимум 30 блюд в заказе!')),
+                            );
+                            return;
+                          }
                           await addToCart(item);
                           setState(() {});
                         },
@@ -440,6 +473,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                           setState(() {});
                         },
                         allergenWarning: !hideAllergenFoods && containsAllergen,
+                        isTotalLimit: totalCount >= 30,
                       ),
                     );
                   },

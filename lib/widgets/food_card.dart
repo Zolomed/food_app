@@ -11,6 +11,7 @@ class FoodCard extends StatelessWidget {
   final VoidCallback onAdd;
   final VoidCallback onRemove;
   final bool allergenWarning;
+  final bool isTotalLimit;
 
   const FoodCard({
     super.key,
@@ -24,6 +25,7 @@ class FoodCard extends StatelessWidget {
     required this.onAdd,
     required this.onRemove,
     this.allergenWarning = false,
+    this.isTotalLimit = false,
   });
 
   @override
@@ -126,7 +128,6 @@ class FoodCard extends StatelessWidget {
                       const Icon(Icons.warning, color: Colors.red, size: 16),
                       const SizedBox(width: 4),
                       Expanded(
-                        // замените Flexible на Expanded
                         child: Text(
                           'Содержит ваш аллерген',
                           style: TextStyle(color: Colors.red, fontSize: 11),
@@ -154,14 +155,14 @@ class FoodCard extends StatelessWidget {
                           ),
                           IconButton(
                             icon: const Icon(Icons.add_circle_outline),
-                            onPressed: onAdd,
+                            onPressed: isTotalLimit ? null : onAdd,
                           ),
                         ],
                       )
                     : SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          onPressed: onAdd,
+                          onPressed: isTotalLimit ? null : onAdd,
                           icon: const Icon(Icons.add, color: Colors.black),
                           label: const Text(
                             'Добавить',
@@ -182,6 +183,18 @@ class FoodCard extends StatelessWidget {
                         ),
                       ),
               ),
+              if (isTotalLimit)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Text(
+                    'Максимум 30 блюд в заказе',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
             ],
           ),
         );

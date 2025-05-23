@@ -34,6 +34,9 @@ class _CartScreenState extends State<CartScreen> {
     });
   }
 
+  int get totalCount =>
+      cartItems.fold<int>(0, (sum, item) => sum + (item['quantity'] as int));
+
   Future<void> addToCart(Map<String, dynamic> menuItem) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -42,6 +45,17 @@ class _CartScreenState extends State<CartScreen> {
     List cart = List<Map<String, dynamic>>.from(doc['cart'] ?? []);
     final index =
         cart.indexWhere((item) => item['menuItemId'] == menuItem['menuItemId']);
+
+    // Проверка на общее количество
+    int totalCount =
+        cart.fold<int>(0, (sum, i) => sum + (i['quantity'] as int));
+    if (totalCount >= 30) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Максимум 30 блюд в заказе!')),
+      );
+      return;
+    }
+
     if (index >= 0) {
       cart[index]['quantity'] += 1;
     } else {
@@ -97,7 +111,7 @@ class _CartScreenState extends State<CartScreen> {
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Text(
-          'Корзина', // Было: 'Корзина'
+          'Корзина',
           style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
@@ -198,9 +212,11 @@ class _CartScreenState extends State<CartScreen> {
                               ),
                               IconButton(
                                 icon: Icon(Icons.add, color: Colors.black),
-                                onPressed: () async {
-                                  await addToCart(item);
-                                },
+                                onPressed: totalCount >= 30
+                                    ? null
+                                    : () async {
+                                        await addToCart(item);
+                                      },
                               ),
                             ],
                           ),
@@ -235,6 +251,18 @@ class _CartScreenState extends State<CartScreen> {
                         ),
                       ],
                     ),
+                    if (totalCount >= 30)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          'Максимум 30 блюд в заказе',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
                     SizedBox(height: 10),
                     SizedBox(
                       width: double.infinity,
