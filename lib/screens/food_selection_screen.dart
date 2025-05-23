@@ -24,6 +24,8 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
   List<String> userAllergies = [];
   bool hideAllergenFoods = true;
 
+  String _searchQuery = ''; // Для поиска по блюдам
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -301,17 +303,18 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
       return Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    // --- Фильтрация по поиску и категории ---
     final filteredMenu = menu.where((item) {
       final hasAllergen = item.allergens.any((a) => userAllergies.contains(a));
-      if (selectedCategory == 'Все') {
-        return hideAllergenFoods ? !hasAllergen : true;
-      }
-      if (hideAllergenFoods) {
-        return !hasAllergen &&
-            (item.category ?? 'Без категории') == selectedCategory;
-      } else {
-        return (item.category ?? 'Без категории') == selectedCategory;
-      }
+      final matchesCategory = selectedCategory == 'Все'
+          ? true
+          : (item.category ?? 'Без категории') == selectedCategory;
+      final matchesSearch = _searchQuery.isEmpty
+          ? true
+          : (item.name.toLowerCase().contains(_searchQuery) ||
+              (item.description ?? '').toLowerCase().contains(_searchQuery));
+      if (hideAllergenFoods && hasAllergen) return false;
+      return matchesCategory && matchesSearch;
     }).toList();
 
     return Scaffold(
@@ -327,7 +330,28 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Категории
+          // --- Поиск по еде ---
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Поиск по блюдам',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                contentPadding:
+                    EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value.trim().toLowerCase();
+                });
+              },
+            ),
+          ),
+          SizedBox(height: 8),
+          // --- Категории ---
           SizedBox(
             height: 50,
             child: ListView.builder(
