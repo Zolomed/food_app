@@ -19,9 +19,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    _loadUserData(); // Загрузка данных пользователя при открытии экрана
   }
 
+  // Загрузка информации о пользователе из Firestore
   Future<void> _loadUserData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -36,21 +37,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // Выход пользователя из аккаунта
   Future<void> _logout() async {
     await FirebaseAuth.instance.signOut();
     Navigator.pushReplacementNamed(context, '/');
   }
 
+  // Повторить заказ: очистить корзину, добавить блюда из заказа и перейти в корзину
   Future<void> _repeatOrderAndGoToCart(
       List<dynamic> items, String restaurantId) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
 
-    // Очищаем корзину
     await docRef.update({'cart': []});
 
-    // Проверка на общее количество
     int totalCount =
         items.fold<int>(0, (sum, i) => sum + (i['quantity'] as int? ?? 1));
     if (totalCount > 30) {
@@ -60,7 +61,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
 
-    // Формируем новую корзину
     List<Map<String, dynamic>> newCart = [];
     for (var item in items) {
       newCart.add({
@@ -75,9 +75,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
     await docRef.update({'cart': newCart});
 
-    // Переход на MainScreen с открытой вкладкой корзины
     if (mounted) {
-      Navigator.pop(context); // Закрыть диалог заказов
+      Navigator.pop(context);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -87,6 +86,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // Открытие диалога с историей заказов пользователя
   void _showOrdersDialog() {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -142,7 +142,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     if (comment.isNotEmpty) parts.add('(${comment})');
                     addressText = parts.join(', ');
                   }
-                  // Формируем строку вида "картошка 2шт., бургер 1шт."
                   String itemsText = items
                       .map((i) => '${i['name']} ${i['quantity'] ?? 1}шт.')
                       .join(', ');
@@ -216,10 +215,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         automaticallyImplyLeading: false,
         title: Text('Профиль'),
         actions: [
+          // Кнопка выхода из аккаунта
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: _logout,
           ),
+          // Кнопка перехода к редактированию профиля
           IconButton(
             icon: Icon(Icons.edit, color: Colors.orange),
             onPressed: () async {
@@ -238,6 +239,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Аватар и имя пользователя
                       Center(
                         child: Column(
                           children: [
@@ -261,24 +263,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                       SizedBox(height: 20),
+                      // Имя пользователя
                       Text('Имя',
                           style: TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold)),
                       SizedBox(height: 5),
                       Text(userData!.name, style: TextStyle(fontSize: 18)),
                       SizedBox(height: 20),
+                      // Email пользователя
                       Text('E-mail',
                           style: TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold)),
                       SizedBox(height: 5),
                       Text(userData!.email, style: TextStyle(fontSize: 18)),
                       SizedBox(height: 20),
+                      // Телефон пользователя
                       Text('Телефон',
                           style: TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold)),
                       SizedBox(height: 5),
                       Text(userData!.phone, style: TextStyle(fontSize: 18)),
                       SizedBox(height: 30),
+                      // Кнопка для просмотра истории заказов
                       Center(
                         child: ElevatedButton.icon(
                           onPressed: _showOrdersDialog,

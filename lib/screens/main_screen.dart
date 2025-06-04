@@ -16,6 +16,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
+  // Список экранов для навигации
   late final List<Widget> _screens;
 
   @override
@@ -23,13 +24,14 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _currentIndex = widget.initialIndex;
     _screens = [
-      RestaurantSelectionScreen(),
-      CartScreen(),
-      FavoritesScreen(),
-      ProfileScreen(),
+      RestaurantSelectionScreen(), // Экран выбора ресторанов
+      CartScreen(), // Экран корзины
+      FavoritesScreen(), // Экран избранного
+      ProfileScreen(), // Экран профиля
     ];
   }
 
+  // Обработка нажатия на пункт нижней навигации
   void _onTabTapped(int index) {
     setState(() {
       _currentIndex = index;
@@ -39,6 +41,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Отображение выбранного экрана
       body: _screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,

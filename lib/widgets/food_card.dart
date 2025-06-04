@@ -40,7 +40,7 @@ class FoodCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Картинка + сердечко
+              // Картинка блюда и кнопка "избранное"
               Padding(
                 padding: const EdgeInsets.only(
                     left: 12, right: 12, top: 12, bottom: 0),
@@ -87,6 +87,7 @@ class FoodCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
+              // Цена блюда
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Text(
@@ -97,6 +98,7 @@ class FoodCard extends StatelessWidget {
                   ),
                 ),
               ),
+              // Название блюда
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Text(
@@ -109,6 +111,7 @@ class FoodCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              // Вес блюда
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Text(
@@ -119,6 +122,7 @@ class FoodCard extends StatelessWidget {
                   ),
                 ),
               ),
+              // Предупреждение об аллергенах
               if (allergenWarning)
                 Padding(
                   padding:
@@ -138,6 +142,7 @@ class FoodCard extends StatelessWidget {
                   ),
                 ),
               const SizedBox(height: 8),
+              // Кнопки добавления/удаления блюда или кнопка "Добавить"
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -183,6 +188,7 @@ class FoodCard extends StatelessWidget {
                         ),
                       ),
               ),
+              // Сообщение о лимите блюд в заказе
               if (isTotalLimit)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),

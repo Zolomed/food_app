@@ -19,14 +19,13 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
   final cuisineController = TextEditingController();
   File? _restaurantImageFile;
 
-  // Для меню
   final List<Map<String, dynamic>> menuItems = [];
   final menuNameController = TextEditingController();
   final menuPriceController = TextEditingController();
   final menuCategoryController = TextEditingController();
   final menuWeightController = TextEditingController();
   final menuDescriptionController = TextEditingController();
-  final menuIngredientsController = TextEditingController(); // Новый контроллер
+  final menuIngredientsController = TextEditingController();
   File? _menuImageFile;
   List<String> selectedMenuAllergens = [];
 
@@ -40,6 +39,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
     fetchAllAllergies();
   }
 
+  // Получение списка всех аллергенов из Firestore
   Future<void> fetchAllAllergies() async {
     final snapshot =
         await FirebaseFirestore.instance.collection('allergies').get();
@@ -49,12 +49,14 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
     });
   }
 
+  // Загрузка изображения в Firebase Storage и получение ссылки
   Future<String?> _uploadImage(File file, String path) async {
     final ref = FirebaseStorage.instance.ref().child(path);
     await ref.putFile(file);
     return await ref.getDownloadURL();
   }
 
+  // Выбор изображения ресторана из галереи
   Future<void> _pickRestaurantImage() async {
     final picker = ImagePicker();
     final picked =
@@ -66,6 +68,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
     }
   }
 
+  // Выбор изображения блюда из галереи
   Future<void> _pickMenuImage() async {
     final picker = ImagePicker();
     final picked =
@@ -77,6 +80,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
     }
   }
 
+  // Добавление блюда в локальный список меню
   void _addMenuItem() async {
     if (menuNameController.text.isEmpty || menuPriceController.text.isEmpty) {
       return;
@@ -96,10 +100,11 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
       'category': menuCategoryController.text.trim(),
       'weight': menuWeightController.text.trim(),
       'description': menuDescriptionController.text.trim(),
-      'ingredients': menuIngredientsController.text.trim(), // Новое поле
+      'ingredients': menuIngredientsController.text.trim(),
       'allergens': selectedMenuAllergens,
     });
 
+    // Очистка полей после добавления блюда
     menuNameController.clear();
     menuPriceController.clear();
     menuCategoryController.clear();
@@ -111,6 +116,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
     setState(() => isLoading = false);
   }
 
+  // Сохранение ресторана и его меню в Firestore
   Future<void> _saveRestaurant() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => isLoading = true);
@@ -129,6 +135,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
       'cuisine': cuisineController.text.trim(),
     });
 
+    // Добавление всех блюд в подколлекцию меню ресторана
     for (var item in menuItems) {
       await restaurantRef.collection('menu').add(item);
     }
@@ -137,6 +144,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Ресторан добавлен!')),
     );
+    // Очистка полей после сохранения ресторана
     nameController.clear();
     descriptionController.clear();
     cuisineController.clear();
@@ -163,6 +171,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
                 key: _formKey,
                 child: Column(
                   children: [
+                    // Картинка ресторана
                     GestureDetector(
                       onTap: _pickRestaurantImage,
                       child: CircleAvatar(
@@ -177,6 +186,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
                       ),
                     ),
                     SizedBox(height: 20),
+                    // Название ресторана
                     TextFormField(
                       controller: nameController,
                       decoration:
@@ -185,6 +195,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
                           v == null || v.isEmpty ? 'Введите название' : null,
                     ),
                     SizedBox(height: 20),
+                    // Тип кухни
                     TextFormField(
                       controller: cuisineController,
                       decoration: InputDecoration(labelText: 'Тип кухни'),
@@ -192,6 +203,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
                           v == null || v.isEmpty ? 'Введите тип кухни' : null,
                     ),
                     SizedBox(height: 20),
+                    // Описание ресторана
                     TextFormField(
                       controller: descriptionController,
                       decoration: InputDecoration(labelText: 'Описание'),
@@ -200,6 +212,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
                     ),
                     SizedBox(height: 30),
                     Divider(),
+                    // Список добавленных блюд
                     Text('Меню', style: TextStyle(fontWeight: FontWeight.bold)),
                     ...menuItems.map((item) => ListTile(
                           leading: item['image'] != null && item['image'] != ''
@@ -210,6 +223,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
                           subtitle: Text('${item['price']} ₽'),
                         )),
                     SizedBox(height: 10),
+                    // Форма для добавления нового блюда
                     Row(
                       children: [
                         Expanded(
@@ -248,17 +262,20 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
                       ],
                     ),
                     SizedBox(height: 10),
+                    // Описание блюда
                     TextFormField(
                       controller: menuDescriptionController,
                       decoration: InputDecoration(labelText: 'Описание блюда'),
                     ),
                     SizedBox(height: 10),
+                    // Ингредиенты блюда
                     TextFormField(
                       controller: menuIngredientsController,
                       decoration:
                           InputDecoration(labelText: 'Ингредиенты блюда'),
                     ),
                     SizedBox(height: 10),
+                    // Список аллергенов блюда
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
@@ -280,6 +297,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
                             });
                           },
                         )),
+                    // Кнопки для добавления фото блюда и самого блюда в меню
                     Row(
                       children: [
                         IconButton(
@@ -293,6 +311,7 @@ class _AdminAddRestaurantScreenState extends State<AdminAddRestaurantScreen> {
                       ],
                     ),
                     SizedBox(height: 30),
+                    // Кнопка для сохранения ресторана и меню
                     ElevatedButton(
                       onPressed: _saveRestaurant,
                       style: ElevatedButton.styleFrom(

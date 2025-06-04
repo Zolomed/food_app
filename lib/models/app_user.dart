@@ -4,14 +4,13 @@ class AppUser {
   final String email;
   final String phone;
   final String? photoUrl;
-  final List<String> favorites; // Устарело, можно удалить позже
+  final List<String> favorites;
   final List<Map<String, dynamic>> cart;
   final List<String> allergies;
   final bool hideAllergenFoods;
   final List<Map<String, dynamic>> addresses;
   final String? selectedAddressId;
 
-  // Новые поля для избранного
   final List<String> favoriteRestaurants;
   final Map<String, List<String>> favoriteMenus;
 

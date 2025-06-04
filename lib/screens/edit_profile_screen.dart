@@ -32,17 +32,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   List<Map<String, dynamic>> addresses = [];
   String? selectedAddressId;
 
-  // Для выпадающего мультиселекта аллергий
   bool allergiesDropdownOpened = false;
 
   @override
   void initState() {
     super.initState();
-    fetchAllAllergies();
-    _loadUserData();
-    _loadAddresses();
+    fetchAllAllergies(); // Загрузка всех возможных аллергий
+    _loadUserData(); // Загрузка данных пользователя
+    _loadAddresses(); // Загрузка адресов пользователя
   }
 
+  // Получение списка всех аллергий из Firestore
   Future<void> fetchAllAllergies() async {
     final snapshot =
         await FirebaseFirestore.instance.collection('allergies').get();
@@ -52,6 +52,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     });
   }
 
+  // Загрузка информации о пользователе
   Future<void> _loadUserData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -73,6 +74,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  // Загрузка адресов пользователя
   Future<void> _loadAddresses() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -83,13 +85,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final List addressesRaw = doc.data()?['addresses'] ?? [];
     setState(() {
       addresses = List<Map<String, dynamic>>.from(addressesRaw);
-      // Если нет выбранного адреса, выбрать первый
       if (addresses.isNotEmpty && selectedAddressId == null) {
         selectedAddressId = addresses.first['id'];
       }
     });
   }
 
+  // Сохранение изменений профиля пользователя
   Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
       final user = FirebaseAuth.instance.currentUser;
@@ -112,6 +114,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  // Выбор аватара пользователя из галереи
   Future<void> _pickAvatar() async {
     final picker = ImagePicker();
     final picked =
@@ -123,6 +126,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  // Загрузка аватара пользователя в Firebase Storage
   Future<String?> _uploadAvatar(String uid) async {
     if (_avatarFile == null) return _photoUrl;
     final ref =
@@ -131,6 +135,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return await ref.getDownloadURL();
   }
 
+  // Добавление нового адреса пользователя
   Future<void> _addAddress() async {
     final result = await Navigator.push(
       context,
@@ -142,6 +147,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  // Удаление адреса пользователя
   Future<void> _deleteAddress(String id) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -168,6 +174,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     });
   }
 
+  // Подсказка о возможности удаления адреса
   void _showDeleteAddressHint() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -195,6 +202,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             child: Column(
               children: [
                 SizedBox(height: 20),
+                // Аватар пользователя
                 Center(
                   child: Stack(
                     children: [
@@ -223,7 +231,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                 ),
                 SizedBox(height: 20),
-                // --- Выпадающий список адресов с подсказкой через snackbar и удалением по long press ---
+                // Выбор адреса доставки
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -297,6 +305,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   onTap: _showDeleteAddressHint,
                 ),
                 SizedBox(height: 20),
+                // Имя пользователя
                 TextFormField(
                   controller: nameController,
                   decoration: InputDecoration(labelText: 'Имя'),
@@ -304,6 +313,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       value == null || value.isEmpty ? 'Введите имя' : null,
                 ),
                 SizedBox(height: 20),
+                // Телефон пользователя
                 TextFormField(
                   controller: phoneController,
                   decoration: InputDecoration(labelText: 'Телефон'),
@@ -311,6 +321,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       value == null || value.isEmpty ? 'Введите телефон' : null,
                 ),
                 SizedBox(height: 20),
+                // Email пользователя
                 TextFormField(
                   controller: emailController,
                   decoration: InputDecoration(labelText: 'E-mail'),
@@ -324,6 +335,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   },
                 ),
                 SizedBox(height: 20),
+                // Переключатель скрытия аллергенных блюд
                 SwitchListTile(
                   title: Text('Скрывать блюда с аллергенами'),
                   value: hideAllergenFoods,
@@ -334,6 +346,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   },
                 ),
                 SizedBox(height: 20),
+                // Выбор аллергий пользователя
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -410,6 +423,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
         ),
       ),
+      // Кнопка сохранения изменений профиля
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),

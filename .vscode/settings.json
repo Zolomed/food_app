@@ -1,9 +1,11 @@
 {
     "cSpell.words": [
+        "автозаполнения",
         "buildscript",
         "cupertino",
         "firestore",
         "geolocator",
-        "jcenter"
+        "jcenter",
+        "placemarks"
     ]
 }

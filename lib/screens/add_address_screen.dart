@@ -12,6 +12,7 @@ class AddAddressScreen extends StatefulWidget {
 }
 
 class _AddAddressScreenState extends State<AddAddressScreen> {
+  // Контроллеры для полей ввода адреса
   final TextEditingController cityController = TextEditingController();
   final TextEditingController streetController = TextEditingController();
   final TextEditingController houseNumberController = TextEditingController();
@@ -19,9 +20,10 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController addressNameController = TextEditingController();
 
-  bool isLocating = false;
+  bool isLocating =
+      false; // Флаг для отображения процесса определения геолокации
 
-  // Метод для автозаполнения адреса по геолокации
+  // Заполнение полей адреса по текущей геолокации пользователя
   Future<void> _fillAddressFromLocation() async {
     setState(() {
       isLocating = true;
@@ -59,6 +61,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
     });
   }
 
+  // Сохранение нового адреса пользователя в Firestore
   Future<void> _saveAddress() async {
     if (_formKey.currentState!.validate()) {
       final user = FirebaseAuth.instance.currentUser;
@@ -84,15 +87,14 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
         addresses.add(newAddress);
         transaction.update(userDoc, {
           'addresses': addresses,
-          'selectedAddressId':
-              addressId, // делаем новый адрес выбранным по умолчанию
+          'selectedAddressId': addressId,
         });
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Адрес успешно сохранен!')),
       );
-      Navigator.pop(context, true); // возвращаем true для обновления списка
+      Navigator.pop(context, true);
     }
   }
 
@@ -123,7 +125,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 24),
-              // Название адреса (например, "Дом", "Работа")
+              // Поле для названия адреса (например, "Дом" или "Работа")
               TextFormField(
                 controller: addressNameController,
                 decoration: InputDecoration(
@@ -148,7 +150,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                 },
               ),
               SizedBox(height: 16),
-              // Город
+              // Поле для города
               TextFormField(
                 controller: cityController,
                 decoration: InputDecoration(
@@ -173,7 +175,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                 },
               ),
               SizedBox(height: 16),
-              // Улица
+              // Поле для улицы
               TextFormField(
                 controller: streetController,
                 decoration: InputDecoration(
@@ -198,7 +200,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                 },
               ),
               SizedBox(height: 16),
-              // Номер дома
+              // Поле для номера дома
               TextFormField(
                 controller: houseNumberController,
                 decoration: InputDecoration(
@@ -223,7 +225,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                 },
               ),
               SizedBox(height: 16),
-              // Квартира
+              // Поле для квартиры (необязательно)
               TextFormField(
                 controller: apartmentController,
                 decoration: InputDecoration(
@@ -242,6 +244,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                 ),
               ),
               SizedBox(height: 24),
+              // Кнопка для сохранения адреса
               Center(
                 child: SizedBox(
                   width: double.infinity,
@@ -264,6 +267,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                 ),
               ),
               SizedBox(height: 16),
+              // Кнопка для автозаполнения адреса по геолокации
               Center(
                 child: ElevatedButton.icon(
                   onPressed: isLocating ? null : _fillAddressFromLocation,

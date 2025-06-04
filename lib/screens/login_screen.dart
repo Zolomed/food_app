@@ -13,17 +13,19 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   String? errorMessage;
-  bool _isPasswordVisible = false; // Состояние для управления видимостью пароля
+  bool _isPasswordVisible = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // Автозаполнение email, если передан через аргументы
     final args = ModalRoute.of(context)?.settings.arguments;
     if (args is Map && args['email'] != null) {
       emailController.text = args['email'];
     }
   }
 
+  // Вход пользователя по email и паролю
   void _login() async {
     if (_formKey.currentState!.validate()) {
       try {
@@ -33,7 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
           password: passwordController.text.trim(),
         );
 
-        // Проверяем, подтвержден ли email
+        // Проверка подтверждения email
         if (credential.user != null && !credential.user!.emailVerified) {
           await FirebaseAuth.instance.signOut();
           setState(() {
@@ -42,7 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
           return;
         }
 
-        // Если вход успешен и email подтвержден, перенаправляем на экран ресторанов
+        // Переход к списку ресторанов после успешного входа
         Navigator.pushNamedAndRemoveUntil(
           context,
           '/restaurants',
@@ -51,7 +53,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
         print('User logged in: ${credential.user?.email}');
       } on FirebaseAuthException catch (e) {
-        // Обрабатываем ошибки Firebase
         if (e.code == 'user-not-found') {
           setState(() {
             errorMessage = 'Пользователь с таким email не найден.';
@@ -71,7 +72,6 @@ class _LoginScreenState extends State<LoginScreen> {
           });
         }
       } catch (e) {
-        // Обрабатываем другие ошибки
         setState(() {
           errorMessage = 'Произошла неизвестная ошибка.';
         });
@@ -87,12 +87,11 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset:
-          true, // Позволяет экрану адаптироваться к клавиатуре
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        automaticallyImplyLeading: false, // Убираем кнопку "Назад"
+        automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -101,6 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Заголовок экрана
               Text(
                 'Вход',
                 style: TextStyle(
@@ -109,6 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               SizedBox(height: 20),
+              // Поле для ввода email
               TextFormField(
                 controller: emailController,
                 decoration: InputDecoration(
@@ -128,9 +129,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
               ),
               SizedBox(height: 20),
+              // Поле для ввода пароля
               TextFormField(
                 controller: passwordController,
-                obscureText: !_isPasswordVisible, // Управляем видимостью пароля
+                obscureText: !_isPasswordVisible,
                 decoration: InputDecoration(
                   labelText: 'Пароль',
                   border: OutlineInputBorder(
@@ -144,8 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     onPressed: () {
                       setState(() {
-                        _isPasswordVisible =
-                            !_isPasswordVisible; // Переключаем состояние
+                        _isPasswordVisible = !_isPasswordVisible;
                       });
                     },
                   ),
@@ -161,11 +162,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
               ),
               SizedBox(height: 10),
+              // Отображение ошибки, если есть
               if (errorMessage != null)
                 Text(
                   errorMessage!,
                   style: TextStyle(color: Colors.red),
                 ),
+              // Кнопка "Забыли пароль?"
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
@@ -179,6 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               SizedBox(height: 20),
+              // Кнопка входа
               Center(
                 child: ElevatedButton(
                   onPressed: _login,
@@ -197,6 +201,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               SizedBox(height: 20),
+              // Ссылка на регистрацию
               Center(
                 child: GestureDetector(
                   onTap: () {

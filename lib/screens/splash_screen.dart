@@ -6,29 +6,32 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Проверяем, авторизован ли пользователь
     return FutureBuilder<User?>(
       future: Future.value(FirebaseAuth.instance.currentUser),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
+          // Показываем индикатор загрузки, пока идет проверка
           return Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
         if (snapshot.data != null) {
-          // Пользователь авторизован
+          // Если пользователь найден — переход к списку ресторанов
           Future.microtask(() => Navigator.pushNamedAndRemoveUntil(
                 context,
                 '/restaurants',
                 (route) => false,
               ));
         } else {
-          // Пользователь не авторизован
+          // Если пользователь не найден — переход на экран входа
           Future.microtask(() => Navigator.pushNamedAndRemoveUntil(
                 context,
                 '/',
                 (route) => false,
               ));
         }
+        // Пока идет переход — возвращаем пустой виджет
         return SizedBox.shrink();
       },
     );

@@ -21,17 +21,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   String? selectedAddressId;
   bool isLoading = true;
 
-  String paymentType = 'card'; // 'card' или 'cash'
-
-  // --- Новое: переменная для времени доставки ---
+  String paymentType = 'card';
   TimeOfDay? selectedTime;
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    _loadUserData(); // Загрузка данных пользователя при открытии экрана
   }
 
+  // Загрузка информации о пользователе и его адресах из Firestore
   Future<void> _loadUserData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -51,6 +50,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     });
   }
 
+  // Добавление нового адреса через отдельный экран
   Future<void> _addAddress() async {
     final result = await Navigator.push(
       context,
@@ -62,6 +62,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
   }
 
+  // Удаление адреса пользователя
   Future<void> _deleteAddress(String id) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -88,6 +89,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     });
   }
 
+  // Подсказка о возможности удаления адреса
   void _showDeleteAddressHint() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -97,6 +99,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  // Сохранение заказа пользователя в Firestore
   Future<void> _saveOrder() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -108,7 +111,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       (a) => a['id'] == selectedAddressId,
       orElse: () => {},
     );
-    // --- Новое: сохраняем время доставки ---
     String? deliveryTime;
     if (selectedTime != null) {
       final now = DateTime.now();
@@ -124,11 +126,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       'total': cart.fold<double>(
           0, (sum, item) => sum + (item['price'] * item['quantity'])),
       'status': 'Оформлен',
-      'deliveryTime': deliveryTime, // Новое поле
+      'deliveryTime': deliveryTime,
     };
     await userDoc.collection('orders').add(order);
   }
 
+  // Выбор времени доставки через диалоговое окно
   Future<void> _pickTime() async {
     final now = TimeOfDay.now();
     final picked = await showTimePicker(
@@ -184,7 +187,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           : null,
                     ),
                     SizedBox(height: 16),
-                    // Список адресов + добавить адрес + подсказка через snackbar и удаление по long press
+                    // Выбор адреса доставки
                     DropdownButtonFormField<String>(
                       value: selectedAddressId,
                       items: [
@@ -254,7 +257,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       onTap: _showDeleteAddressHint,
                     ),
                     SizedBox(height: 16),
-                    // --- Новый блок выбора времени доставки ---
+                    // Выбор времени доставки
                     Row(
                       children: [
                         Expanded(
@@ -291,7 +294,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ],
                     ),
                     SizedBox(height: 16),
-                    // --- Блок выбора типа оплаты (Dropdown) ---
+                    // Выбор способа оплаты
                     DropdownButtonFormField<String>(
                       value: paymentType,
                       items: [
@@ -317,6 +320,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                     ),
                     SizedBox(height: 32),
+                    // Кнопка оформления заказа
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(

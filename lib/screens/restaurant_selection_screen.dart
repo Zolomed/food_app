@@ -20,10 +20,11 @@ class _RestaurantSelectionScreenState extends State<RestaurantSelectionScreen> {
   @override
   void initState() {
     super.initState();
-    _futureRestaurants = fetchRestaurants();
-    _loadFavoriteRestaurants();
+    _futureRestaurants = fetchRestaurants(); // Загрузка ресторанов из Firestore
+    _loadFavoriteRestaurants(); // Загрузка избранных ресторанов пользователя
   }
 
+  // Получение списка ресторанов с меню из Firestore
   Future<List<Restaurant>> fetchRestaurants() async {
     final restaurantsSnapshot =
         await FirebaseFirestore.instance.collection('restaurants').get();
@@ -38,6 +39,7 @@ class _RestaurantSelectionScreenState extends State<RestaurantSelectionScreen> {
     return restaurants;
   }
 
+  // Загрузка id избранных ресторанов пользователя
   Future<void> _loadFavoriteRestaurants() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -51,6 +53,7 @@ class _RestaurantSelectionScreenState extends State<RestaurantSelectionScreen> {
     });
   }
 
+  // Добавление или удаление ресторана из избранного
   Future<void> _toggleFavoriteRestaurant(String restaurantId) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -82,6 +85,7 @@ class _RestaurantSelectionScreenState extends State<RestaurantSelectionScreen> {
       ),
       body: Column(
         children: [
+          // Поле поиска по ресторанам
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: TextField(
@@ -101,6 +105,7 @@ class _RestaurantSelectionScreenState extends State<RestaurantSelectionScreen> {
               },
             ),
           ),
+          // Список ресторанов (сетка или список)
           Expanded(
             child: FutureBuilder<List<Restaurant>>(
               future: _futureRestaurants,
@@ -123,6 +128,7 @@ class _RestaurantSelectionScreenState extends State<RestaurantSelectionScreen> {
                 return LayoutBuilder(
                   builder: (context, constraints) {
                     if (constraints.maxWidth > 700) {
+                      // Сетка ресторанов для широких экранов
                       const minCardWidth = 340.0;
                       final crossAxisCount =
                           (constraints.maxWidth / minCardWidth)
@@ -161,6 +167,7 @@ class _RestaurantSelectionScreenState extends State<RestaurantSelectionScreen> {
                         },
                       );
                     } else {
+                      // Список ресторанов для мобильных устройств
                       return ListView.builder(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 16),
@@ -191,6 +198,7 @@ class _RestaurantSelectionScreenState extends State<RestaurantSelectionScreen> {
   }
 }
 
+// Карточка ресторана для отображения в списке/сетке
 class _RestaurantCard extends StatelessWidget {
   final Restaurant restaurant;
   final double fixedHeight;
@@ -217,6 +225,7 @@ class _RestaurantCard extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(28),
           onTap: () {
+            // Переход к экрану выбора блюд ресторана
             Navigator.pushNamed(
               context,
               '/food_selection',
@@ -230,6 +239,7 @@ class _RestaurantCard extends StatelessWidget {
               children: [
                 Stack(
                   children: [
+                    // Картинка ресторана
                     ClipRRect(
                       borderRadius:
                           BorderRadius.vertical(top: Radius.circular(28)),
@@ -247,6 +257,7 @@ class _RestaurantCard extends StatelessWidget {
                               fit: BoxFit.cover,
                             ),
                     ),
+                    // Кнопка "избранное"
                     Positioned(
                       top: 8,
                       right: 8,
@@ -272,6 +283,7 @@ class _RestaurantCard extends StatelessWidget {
                       children: [
                         Row(
                           children: [
+                            // Название ресторана
                             Expanded(
                               child: Text(
                                 restaurant.name,
@@ -283,6 +295,7 @@ class _RestaurantCard extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
+                            // Кнопка информации о ресторане
                             IconButton(
                               icon: Icon(Icons.info_outline,
                                   color: Colors.orange),
@@ -322,6 +335,7 @@ class _RestaurantCard extends StatelessWidget {
                             ),
                           ],
                         ),
+                        // Тип кухни ресторана
                         Text(
                           cuisine,
                           style: TextStyle(color: Colors.black87, fontSize: 14),

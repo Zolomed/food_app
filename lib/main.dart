@@ -14,14 +14,15 @@ import 'screens/admin_add_restaurant_screen.dart';
 import 'screens/edit_profile_screen.dart';
 
 //TODO как то убрать кучу импортов
-
 //TODO реализовать рейтинг
 
 void main() async {
+  // Инициализация Flutter и Firebase
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  // Для DevicePreview (отладка на разных устройствах)
   // runApp(
   //   DevicePreview(
   //     enabled: true,
@@ -42,6 +43,7 @@ class MyApp extends StatelessWidget {
       // builder: DevicePreview.appBuilder,
       debugShowCheckedModeBanner: false,
       title: 'Living with food',
+      // Основная тема приложения
       theme: ThemeData(
         primarySwatch: Colors.orange,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
@@ -63,7 +65,9 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
+      // Начальный маршрут
       initialRoute: '/splash',
+      // Маршруты приложения
       routes: {
         '/splash': (context) => SplashScreen(),
         '/': (context) => LoginScreen(),

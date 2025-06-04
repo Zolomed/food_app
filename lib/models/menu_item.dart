@@ -6,7 +6,7 @@ class MenuItem {
   final String? category;
   final String? weight;
   final String? description;
-  final String? ingredients; // Новое поле
+  final String? ingredients;
   final List<String> allergens;
 
   MenuItem({

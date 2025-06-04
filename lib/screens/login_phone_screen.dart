@@ -17,8 +17,9 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
   String? errorMessage;
   bool isCodeSent = false;
   bool isVerifyCode = false;
-  String? verificationId; // Для хранения verificationId
+  String? verificationId;
 
+  // Отправка кода подтверждения или вход по номеру телефона
   void _login() async {
     setState(() {
       errorMessage = null;
@@ -28,6 +29,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
       FirebaseAuth auth = FirebaseAuth.instance;
 
       if (kIsWeb) {
+        // Веб: отправка кода и подтверждение
         ConfirmationResult confirmationResult =
             await auth.signInWithPhoneNumber(
                 phoneController.text.trim().replaceAll(RegExp(r'[^\d+]'), ''));
@@ -39,6 +41,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
         await confirmationResult.confirm(smsCodeController.text.trim());
         Navigator.pushReplacementNamed(context, '/restaurants');
       } else {
+        // Мобильное устройство: отправка кода и обработка событий
         await FirebaseAuth.instance.verifyPhoneNumber(
           phoneNumber:
               phoneController.text.trim().replaceAll(RegExp(r'[^\d+]'), ''),
@@ -64,6 +67,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
     }
   }
 
+  // Подтверждение кода из SMS
   void _verifyCode() async {
     FirebaseAuth auth = FirebaseAuth.instance;
 
@@ -79,12 +83,11 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset:
-          true, // Позволяет экрану адаптироваться к клавиатуре
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        automaticallyImplyLeading: false, // Убираем кнопку "Назад"
+        automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -93,6 +96,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Заголовок экрана
               Text(
                 'Вход',
                 style: TextStyle(
@@ -101,12 +105,11 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                 ),
               ),
               SizedBox(height: 20),
+              // Поле для ввода номера телефона
               TextFormField(
                 controller: phoneController,
                 keyboardType: TextInputType.phone,
-                inputFormatters: [
-                  PhoneInputFormatter()
-                ], // Форматирование номера
+                inputFormatters: [PhoneInputFormatter()],
                 decoration: InputDecoration(
                   labelText: 'Номер телефона',
                   border: OutlineInputBorder(
@@ -127,6 +130,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
               ),
               if (isCodeSent) ...[
                 SizedBox(height: 20),
+                // Поле для ввода кода из SMS
                 TextFormField(
                   controller: smsCodeController,
                   keyboardType: TextInputType.number,
@@ -145,12 +149,14 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                 ),
               ],
               SizedBox(height: 10),
+              // Отображение ошибки, если есть
               if (errorMessage != null)
                 Text(
                   errorMessage!,
                   style: TextStyle(color: Colors.red),
                 ),
               SizedBox(height: 20),
+              // Кнопка отправки или подтверждения кода
               Center(
                 child: ElevatedButton(
                   onPressed: isVerifyCode ? _verifyCode : _login,

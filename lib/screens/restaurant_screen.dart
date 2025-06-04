@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import '../models/restaurant.dart';
 
-//TODO реализовать
-
 class RestaurantScreen extends StatelessWidget {
   const RestaurantScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Получаем объект ресторана из аргументов маршрута
     final Restaurant restaurant =
         ModalRoute.of(context)!.settings.arguments as Restaurant;
 
@@ -24,6 +23,7 @@ class RestaurantScreen extends StatelessWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Картинка ресторана
           restaurant.image.startsWith('http')
               ? Image.network(
                   restaurant.image,
@@ -37,6 +37,7 @@ class RestaurantScreen extends StatelessWidget {
                   height: 200,
                   fit: BoxFit.cover,
                 ),
+          // Описание ресторана
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: Text(
@@ -44,6 +45,7 @@ class RestaurantScreen extends StatelessWidget {
               style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
           ),
+          // Кнопка перехода к выбору блюд
           Expanded(
             child: Center(
               child: ElevatedButton(

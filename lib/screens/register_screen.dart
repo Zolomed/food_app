@@ -23,6 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? errorMessage;
   bool _isPasswordVisible = false;
 
+  // Регистрация пользователя и сохранение данных в Firestore
   void _register() async {
     final db = FirebaseFirestore.instance;
 
@@ -107,6 +108,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Заголовок экрана
               Text(
                 'Регистрация',
                 style: TextStyle(
@@ -115,6 +117,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
               SizedBox(height: 20),
+              // Поле для ввода имени
               TextFormField(
                 controller: nameController,
                 decoration: InputDecoration(
@@ -131,6 +134,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 },
               ),
               SizedBox(height: 20),
+              // Поле для ввода email
               TextFormField(
                 controller: emailController,
                 decoration: InputDecoration(
@@ -151,6 +155,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 },
               ),
               SizedBox(height: 20),
+              // Поле для ввода телефона
               TextFormField(
                 controller: phoneController,
                 keyboardType: TextInputType.phone,
@@ -176,6 +181,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 },
               ),
               SizedBox(height: 20),
+              // Поле для ввода пароля
               TextFormField(
                 controller: passwordController,
                 obscureText: !_isPasswordVisible,
@@ -212,12 +218,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 },
               ),
               SizedBox(height: 10),
+              // Отображение ошибки, если есть
               if (errorMessage != null)
                 Text(
                   errorMessage!,
                   style: TextStyle(color: Colors.red),
                 ),
               SizedBox(height: 20),
+              // Кнопка регистрации
               Center(
                 child: ElevatedButton(
                   onPressed: _register,

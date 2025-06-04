@@ -5,7 +5,7 @@ class Restaurant {
   final String name;
   final String description;
   final String image;
-  final String cuisine; // Новый параметр
+  final String cuisine;
   final List<MenuItem> menu;
 
   Restaurant({

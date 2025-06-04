@@ -25,17 +25,18 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
   bool hideAllergenFoods = true;
   bool isRestaurantFavorite = false;
 
-  String _searchQuery = ''; // Для поиска по блюдам
+  String _searchQuery = '';
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_isInit) {
-      _initData();
+      _initData(); // Инициализация данных при первом открытии экрана
       _isInit = true;
     }
   }
 
+  // Загрузка данных ресторана, меню, категорий и пользовательских настроек
   Future<void> _initData() async {
     final Restaurant rest =
         ModalRoute.of(context)!.settings.arguments as Restaurant;
@@ -55,6 +56,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
     await _loadFavoriteRestaurant();
   }
 
+  // Загрузка аллергий пользователя и настройки скрытия аллергенных блюд
   Future<void> _loadUserAllergies() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -68,6 +70,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
     });
   }
 
+  // Загрузка избранных блюд пользователя для текущего ресторана
   Future<void> _loadFavoriteMenu() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || restaurant == null) return;
@@ -84,6 +87,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
     });
   }
 
+  // Добавление или удаление блюда из избранного
   Future<void> _toggleFavoriteMenu(String menuItemId) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || restaurant == null) return;
@@ -103,6 +107,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
     await _loadFavoriteMenu();
   }
 
+  // Загрузка информации о том, добавлен ли ресторан в избранное
   Future<void> _loadFavoriteRestaurant() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || restaurant == null) return;
@@ -117,6 +122,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
     });
   }
 
+  // Добавление или удаление ресторана из избранного
   Future<void> _toggleFavoriteRestaurant() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || restaurant == null) return;
@@ -135,6 +141,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
     });
   }
 
+  // Загрузка количества каждого блюда в корзине пользователя
   Future<void> _loadCartQuantities() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -153,6 +160,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
     });
   }
 
+  // Добавление блюда в корзину пользователя
   Future<void> addToCart(MenuItem item) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -161,10 +169,10 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
     List cart = List<Map<String, dynamic>>.from(doc.data()?['cart'] ?? []);
     final index = cart.indexWhere((i) => i['menuItemId'] == item.id);
 
-    // --- Проверка ресторана ---
     final String currentRestaurantId = restaurant?.id ?? '';
     if (cart.isNotEmpty) {
       final String cartRestaurantId = cart.first['restaurantId'] ?? '';
+      // Проверка: можно заказывать только из одного ресторана
       if (cartRestaurantId != currentRestaurantId) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -174,11 +182,10 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
         return;
       }
     }
-    // --- Конец проверки ресторана ---
 
-    // Проверка на общее количество
     int totalCount =
         cart.fold<int>(0, (sum, i) => sum + (i['quantity'] as int));
+    // Проверка на максимальное количество блюд
     if (totalCount >= 30) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Максимум 30 блюд в заказе!')),
@@ -203,6 +210,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
     await _loadCartQuantities();
   }
 
+  // Удаление блюда из корзины пользователя
   Future<void> removeFromCart(MenuItem item) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -221,9 +229,11 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
     }
   }
 
+  // Общее количество блюд в корзине
   int get totalCartCount =>
       cartQuantities.values.fold(0, (sum, qty) => sum + qty);
 
+  // Открытие подробного диалога по блюду
   void _showFoodDialog(MenuItem item) {
     final mediaQuery = MediaQuery.of(context);
     final screenHeight = mediaQuery.size.height;
@@ -268,6 +278,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                       ),
                     ),
                     SizedBox(height: 16),
+                    // Картинка блюда
                     ClipRRect(
                       borderRadius: BorderRadius.circular(18),
                       child: item.image.startsWith('http')
@@ -285,6 +296,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                             ),
                     ),
                     SizedBox(height: 20),
+                    // Описание блюда
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Text(
@@ -328,6 +340,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                       ),
                     ),
                     SizedBox(height: 8),
+                    // Кнопка добавления блюда в корзину
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: SizedBox(
@@ -400,14 +413,14 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
       return Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    // Категории: "Все", "Избранное", остальные
+    // Формирование списка категорий для фильтрации
     final List<String> displayCategories = [
       'Все',
       'Избранное',
       ...categories.where((c) => c != 'Все' && c != 'Избранное')
     ];
 
-    // Фильтрация меню по выбранной категории
+    // Фильтрация меню по категории, поиску и аллергенам
     final filteredMenu = menu.where((item) {
       final hasAllergen = item.allergens.any((a) => userAllergies.contains(a));
       bool matchesCategory;
@@ -442,6 +455,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                 style: TextStyle(color: Colors.black),
               ),
             ),
+            // Кнопка "избранное" для ресторана
             IconButton(
               icon: Icon(
                 isRestaurantFavorite ? Icons.favorite : Icons.favorite_border,
@@ -459,6 +473,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Поле поиска по блюдам
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: TextField(
@@ -479,6 +494,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
             ),
           ),
           SizedBox(height: 8),
+          // Список категорий для фильтрации
           SizedBox(
             height: 50,
             child: ListView.builder(
@@ -514,6 +530,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
               },
             ),
           ),
+          // Сетка блюд
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -608,6 +625,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
           ),
         ],
       ),
+      // Кнопка перехода к оплате, если корзина не пуста
       bottomNavigationBar: totalCartCount > 0
           ? SafeArea(
               child: Container(

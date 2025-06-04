@@ -12,15 +12,15 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final TextEditingController emailController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  // Отправка письма для сброса пароля на email пользователя
   void _resetPassword() async {
     if (_formKey.currentState!.validate()) {
       try {
-        // Отправляем запрос на сброс пароля
         await FirebaseAuth.instance.sendPasswordResetEmail(
           email: emailController.text.trim(),
         );
 
-        // Показываем сообщение об успешной отправке
+        // Показываем уведомление об успешной отправке письма
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -29,17 +29,16 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           ),
         );
 
-        // Возвращаемся на предыдущий экран
         Navigator.pop(context);
       } on FirebaseAuthException catch (e) {
-        // Обрабатываем ошибки Firebase
+        // Обработка ошибок Firebase
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Произошла ошибка: ${e.message}'),
           ),
         );
       } catch (e) {
-        // Обрабатываем другие ошибки
+        // Обработка других ошибок
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Произошла неизвестная ошибка.'),
@@ -53,8 +52,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset:
-          true, // Позволяет экрану адаптироваться к клавиатуре
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -72,6 +70,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Заголовок экрана
               Text(
                 'Сброс пароля',
                 style: TextStyle(
@@ -80,11 +79,13 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 ),
               ),
               SizedBox(height: 20),
+              // Инструкция для пользователя
               Text(
                 'Пожалуйста, введите свой адрес электронной почты, чтобы запросить сброс пароля.',
                 style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
               SizedBox(height: 20),
+              // Поле для ввода email
               TextFormField(
                 controller: emailController,
                 decoration: InputDecoration(
@@ -105,6 +106,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 },
               ),
               SizedBox(height: 20),
+              // Кнопка отправки письма для сброса пароля
               Center(
                 child: ElevatedButton(
                   onPressed: _resetPassword,

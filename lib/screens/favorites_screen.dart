@@ -19,9 +19,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   @override
   void initState() {
     super.initState();
-    _loadFavoriteRestaurants();
+    _loadFavoriteRestaurants(); // Загрузка избранных ресторанов при запуске экрана
   }
 
+  // Загрузка избранных ресторанов пользователя из Firestore
   Future<void> _loadFavoriteRestaurants() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -52,6 +53,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     });
   }
 
+  // Добавление или удаление ресторана из избранного
   Future<void> _toggleFavoriteRestaurant(String restaurantId) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -84,12 +86,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : favoriteRestaurants.isEmpty
+              // Если нет избранных ресторанов — показать сообщение
               ? Center(
                   child: Text(
                     'Избранных ресторанов пока нет',
                     style: TextStyle(fontSize: 18, color: Colors.grey),
                   ),
                 )
+              // Сетка или список ресторанов в зависимости от ширины экрана
               : LayoutBuilder(
                   builder: (context, constraints) {
                     if (constraints.maxWidth > 700) {
@@ -156,6 +160,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 }
 
+// Виджет карточки ресторана в избранном
 class _RestaurantCard extends StatelessWidget {
   final Restaurant restaurant;
   final double fixedHeight;
@@ -182,6 +187,7 @@ class _RestaurantCard extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(28),
           onTap: () {
+            // Переход к экрану выбора блюд ресторана
             Navigator.pushNamed(
               context,
               '/food_selection',
@@ -195,6 +201,7 @@ class _RestaurantCard extends StatelessWidget {
               children: [
                 Stack(
                   children: [
+                    // Картинка ресторана
                     ClipRRect(
                       borderRadius:
                           BorderRadius.vertical(top: Radius.circular(28)),
@@ -212,6 +219,7 @@ class _RestaurantCard extends StatelessWidget {
                               fit: BoxFit.cover,
                             ),
                     ),
+                    // Кнопка "избранное"
                     Positioned(
                       top: 8,
                       right: 8,
@@ -237,6 +245,7 @@ class _RestaurantCard extends StatelessWidget {
                       children: [
                         Row(
                           children: [
+                            // Название ресторана
                             Expanded(
                               child: Text(
                                 restaurant.name,
@@ -248,6 +257,7 @@ class _RestaurantCard extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
+                            // Кнопка информации о ресторане
                             IconButton(
                               icon: Icon(Icons.info_outline,
                                   color: Colors.orange),
@@ -287,6 +297,7 @@ class _RestaurantCard extends StatelessWidget {
                             ),
                           ],
                         ),
+                        // Тип кухни ресторана
                         Text(
                           cuisine,
                           style: TextStyle(color: Colors.black87, fontSize: 14),

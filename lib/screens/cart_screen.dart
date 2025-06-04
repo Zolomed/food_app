@@ -18,9 +18,10 @@ class _CartScreenState extends State<CartScreen> {
   @override
   void initState() {
     super.initState();
-    _loadCart();
+    _loadCart(); // Загрузка корзины при инициализации экрана
   }
 
+  // Получение корзины пользователя из Firestore
   Future<void> _loadCart() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -34,9 +35,11 @@ class _CartScreenState extends State<CartScreen> {
     });
   }
 
+  // Подсчёт общего количества блюд в корзине
   int get totalCount =>
       cartItems.fold<int>(0, (sum, item) => sum + (item['quantity'] as int));
 
+  // Добавление блюда в корзину (или увеличение количества)
   Future<void> addToCart(Map<String, dynamic> menuItem) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -46,10 +49,10 @@ class _CartScreenState extends State<CartScreen> {
     final index =
         cart.indexWhere((item) => item['menuItemId'] == menuItem['menuItemId']);
 
-    // --- Проверка ресторана ---
     final String currentRestaurantId = menuItem['restaurantId'] ?? '';
     if (cart.isNotEmpty) {
       final String cartRestaurantId = cart.first['restaurantId'] ?? '';
+      // Проверка: можно заказывать только из одного ресторана
       if (cartRestaurantId != currentRestaurantId) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -59,11 +62,10 @@ class _CartScreenState extends State<CartScreen> {
         return;
       }
     }
-    // --- Конец проверки ресторана ---
 
-    // Проверка на общее количество
     int totalCount =
         cart.fold<int>(0, (sum, i) => sum + (i['quantity'] as int));
+    // Проверка на максимальное количество блюд
     if (totalCount >= 30) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Максимум 30 блюд в заказе!')),
@@ -80,6 +82,7 @@ class _CartScreenState extends State<CartScreen> {
     _loadCart();
   }
 
+  // Уменьшение количества блюда или удаление из корзины
   Future<void> decreaseFromCart(Map<String, dynamic> menuItem) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -99,6 +102,7 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
+  // Очистка всей корзины пользователя
   Future<void> clearCart() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -109,6 +113,7 @@ class _CartScreenState extends State<CartScreen> {
     _loadCart();
   }
 
+  // Подсчёт итоговой суммы заказа
   double get totalPrice {
     double total = 0;
     for (var item in cartItems) {
@@ -144,6 +149,7 @@ class _CartScreenState extends State<CartScreen> {
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : cartItems.isEmpty
+              // Если корзина пуста — показать сообщение
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(40.0),
@@ -153,6 +159,7 @@ class _CartScreenState extends State<CartScreen> {
                     ),
                   ),
                 )
+              // Список товаров в корзине
               : ListView.separated(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 16.0, vertical: 16.0),
@@ -163,6 +170,7 @@ class _CartScreenState extends State<CartScreen> {
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
+                        // Картинка блюда
                         ClipRRect(
                           borderRadius: BorderRadius.circular(12),
                           child: item['image'] != null &&
@@ -181,6 +189,7 @@ class _CartScreenState extends State<CartScreen> {
                                 ),
                         ),
                         SizedBox(width: 14),
+                        // Название и параметры блюда
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,6 +216,7 @@ class _CartScreenState extends State<CartScreen> {
                           ),
                         ),
                         SizedBox(width: 10),
+                        // Кнопки для изменения количества блюда
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.grey[100],
@@ -240,6 +250,7 @@ class _CartScreenState extends State<CartScreen> {
                     );
                   },
                 ),
+      // Нижняя панель с итоговой суммой и кнопкой перехода к оформлению заказа
       bottomNavigationBar: cartItems.isNotEmpty
           ? SafeArea(
               child: Container(
@@ -282,6 +293,7 @@ class _CartScreenState extends State<CartScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
+                        // Переход к оформлению заказа
                         onPressed: cartItems.isEmpty
                             ? null
                             : () async {
