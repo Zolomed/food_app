@@ -38,110 +38,126 @@ class FoodCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
           ),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Картинка блюда и кнопка "избранное"
-              Padding(
-                padding: const EdgeInsets.only(
-                    left: 12, right: 12, top: 12, bottom: 0),
-                child: Stack(
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Center(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: image.startsWith('http')
-                            ? Image.network(
-                                image,
-                                height: constraints.maxWidth > 220 ? 150 : 110,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                              )
-                            : Image.asset(
-                                image,
-                                height: constraints.maxWidth > 220 ? 150 : 110,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
+                    // Картинка блюда и кнопка "избранное"
+                    Padding(
+                      padding: const EdgeInsets.only(
+                          left: 12, right: 12, top: 12, bottom: 0),
+                      child: Stack(
+                        children: [
+                          Center(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: image.startsWith('http')
+                                  ? Image.network(
+                                      image,
+                                      height: constraints.maxWidth > 220
+                                          ? 150
+                                          : 110,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.asset(
+                                      image,
+                                      height: constraints.maxWidth > 220
+                                          ? 150
+                                          : 110,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    ),
+                            ),
+                          ),
+                          Positioned(
+                            top: 6,
+                            right: 6,
+                            child: GestureDetector(
+                              onTap: onFavoriteTap,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.85),
+                                  shape: BoxShape.circle,
+                                ),
+                                padding: const EdgeInsets.all(4),
+                                child: Icon(
+                                  isFavorite
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  color: isFavorite ? Colors.red : Colors.grey,
+                                  size: 22,
+                                ),
                               ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    Positioned(
-                      top: 6,
-                      right: 6,
-                      child: GestureDetector(
-                        onTap: onFavoriteTap,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.85),
-                            shape: BoxShape.circle,
-                          ),
-                          padding: const EdgeInsets.all(4),
-                          child: Icon(
-                            isFavorite ? Icons.favorite : Icons.favorite_border,
-                            color: isFavorite ? Colors.red : Colors.grey,
-                            size: 22,
-                          ),
+                    const SizedBox(height: 8),
+                    // Цена блюда
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        '${price.toStringAsFixed(2)}₽',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
+                    // Название блюда
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    // Вес блюда
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        weight != null && weight!.isNotEmpty ? '$weight г' : '',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ),
+                    // Предупреждение об аллергенах
+                    if (allergenWarning)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 2),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.warning,
+                                color: Colors.red, size: 16),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                'Содержит ваш аллерген',
+                                style:
+                                    TextStyle(color: Colors.red, fontSize: 11),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 8),
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
-              // Цена блюда
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  '${price.toStringAsFixed(2)}₽',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              // Название блюда
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              // Вес блюда
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  weight != null && weight!.isNotEmpty ? '$weight г' : '',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ),
-              // Предупреждение об аллергенах
-              if (allergenWarning)
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.warning, color: Colors.red, size: 16),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          'Содержит ваш аллерген',
-                          style: TextStyle(color: Colors.red, fontSize: 11),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              const SizedBox(height: 8),
               // Кнопки добавления/удаления блюда или кнопка "Добавить"
               Padding(
                 padding:

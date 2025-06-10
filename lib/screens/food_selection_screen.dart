@@ -543,8 +543,12 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                         (crossAxisCount - 1) * spacing -
                         20) /
                     crossAxisCount;
-                final cardHeight = 380.0;
-                final aspectRatio = cardWidth / cardHeight;
+
+                // Адаптивная высота карточки: пропорция 1.3, но не меньше 220 и не больше 350
+                final cardHeight = cardWidth * 1.7;
+                final clampedCardHeight = cardHeight.clamp(325.0, 360.0);
+                final aspectRatio = cardWidth / clampedCardHeight;
+
                 return GridView.builder(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
