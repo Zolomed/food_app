@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:food_app/widgets/food_detail_bottom_sheet.dart';
 import '../models/menu_item.dart';
 import '../models/restaurant.dart';
 import '../widgets/food_card.dart';
@@ -236,172 +237,54 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
   // Открытие подробного диалога по блюду
   void _showFoodDialog(MenuItem item) {
     final mediaQuery = MediaQuery.of(context);
-    final screenHeight = mediaQuery.size.height;
     final screenWidth = mediaQuery.size.width;
 
     final double minHeight = 500;
     final double maxHeight = 600;
-    final double desiredHeight =
-        (screenHeight * 0.8).clamp(minHeight, maxHeight);
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return Container(
-          constraints: BoxConstraints(
-            minHeight: minHeight,
-            maxHeight: desiredHeight,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: minHeight,
-                maxHeight: desiredHeight,
-              ),
-              child: IntrinsicHeight(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(height: 16),
-                    Container(
-                      width: 60,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    // Картинка блюда
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(18),
-                      child: item.image.startsWith('http')
-                          ? Image.network(
-                              item.image,
-                              width: screenWidth,
-                              height: 220,
-                              fit: BoxFit.cover,
-                            )
-                          : Image.asset(
-                              item.image,
-                              width: screenWidth,
-                              height: 220,
-                              fit: BoxFit.cover,
-                            ),
-                    ),
-                    SizedBox(height: 20),
-                    // Описание блюда
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text(
-                        item.description ?? '',
-                        style: TextStyle(fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    if ((item.ingredients ?? '').isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16.0, vertical: 12),
-                        child: Text(
-                          item.ingredients!,
-                          style: TextStyle(fontSize: 15, color: Colors.black87),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16.0, vertical: 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (item.weight != null && item.weight!.isNotEmpty)
-                            Text(
-                              '${item.weight} г',
-                              style: TextStyle(
-                                  fontSize: 15, color: Colors.grey[700]),
-                            ),
-                          if (item.weight != null && item.weight!.isNotEmpty)
-                            SizedBox(width: 10),
-                          Text(
-                            '${item.price} ₽',
-                            style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.orange,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    // Кнопка добавления блюда в корзину
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            final user = FirebaseAuth.instance.currentUser;
-                            if (user == null) return;
-                            final doc = await FirebaseFirestore.instance
-                                .collection('users')
-                                .doc(user.uid)
-                                .get();
-                            List cart = List<Map<String, dynamic>>.from(
-                                doc.data()?['cart'] ?? []);
-                            final String currentRestaurantId =
-                                restaurant?.id ?? '';
-                            if (cart.isNotEmpty) {
-                              final String cartRestaurantId =
-                                  cart.first['restaurantId'] ?? '';
-                              if (cartRestaurantId != currentRestaurantId) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(
-                                          'Можно заказывать только из одного ресторана! Очистьте корзину для нового заказа.')),
-                                );
-                                return;
-                              }
-                            }
-                            int totalCount = cartQuantities.values
-                                .fold(0, (sum, qty) => sum + qty);
-                            if (totalCount >= 30) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content:
-                                        Text('Максимум 30 блюд в заказе!')),
-                              );
-                              return;
-                            }
-                            await addToCart(item);
-                            Navigator.pop(ctx);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            padding: EdgeInsets.symmetric(vertical: 15),
-                          ),
-                          child: Text(
-                            'Добавить в корзину',
-                            style: TextStyle(fontSize: 18),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                  ],
-                ),
-              ),
-            ),
-          ),
+        return FoodDetailBottomSheet(
+          item: item,
+          screenWidth: screenWidth,
+          minHeight: minHeight,
+          maxHeight: maxHeight,
+          onAddToCart: () async {
+            final user = FirebaseAuth.instance.currentUser;
+            if (user == null) return;
+            final doc = await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .get();
+            List cart =
+                List<Map<String, dynamic>>.from(doc.data()?['cart'] ?? []);
+            final String currentRestaurantId = restaurant?.id ?? '';
+            if (cart.isNotEmpty) {
+              final String cartRestaurantId = cart.first['restaurantId'] ?? '';
+              if (cartRestaurantId != currentRestaurantId) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text(
+                          'Можно заказывать только из одного ресторана! Очистьте корзину для нового заказа.')),
+                );
+                return;
+              }
+            }
+            int totalCount =
+                cartQuantities.values.fold(0, (sum, qty) => sum + qty);
+            if (totalCount >= 30) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Максимум 30 блюд в заказе!')),
+              );
+              return;
+            }
+            await addToCart(item);
+            Navigator.pop(ctx);
+          },
+          userAllergies: userAllergies,
         );
       },
     );
