@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class FoodCard extends StatelessWidget {
   final String image;
@@ -54,14 +55,24 @@ class FoodCard extends StatelessWidget {
                           Center(
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(16),
+                              // Кэшированное изображение блюда
                               child: image.startsWith('http')
-                                  ? Image.network(
-                                      image,
+                                  ? CachedNetworkImage(
+                                      imageUrl: image,
                                       height: constraints.maxWidth > 220
                                           ? 150
                                           : 110,
                                       width: double.infinity,
                                       fit: BoxFit.cover,
+                                      placeholder: (context, url) => Container(
+                                        color: Colors.grey[200],
+                                        height: constraints.maxWidth > 220
+                                            ? 150
+                                            : 110,
+                                        width: double.infinity,
+                                      ),
+                                      errorWidget: (context, url, error) =>
+                                          Icon(Icons.error),
                                     )
                                   : Image.asset(
                                       image,
@@ -73,6 +84,7 @@ class FoodCard extends StatelessWidget {
                                     ),
                             ),
                           ),
+                          // Кнопка "избранное"
                           Positioned(
                             top: 6,
                             right: 6,

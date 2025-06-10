@@ -544,7 +544,7 @@ class _FoodSelectionScreenState extends State<FoodSelectionScreen> {
                         20) /
                     crossAxisCount;
 
-                // Адаптивная высота карточки: пропорция 1.3, но не меньше 220 и не больше 350
+                // Адаптивная высота карточки
                 final cardHeight = cardWidth * 1.7;
                 final clampedCardHeight = cardHeight.clamp(325.0, 360.0);
                 final aspectRatio = cardWidth / clampedCardHeight;
