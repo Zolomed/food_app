@@ -6,6 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 
 import 'add_address_screen.dart';
+import 'change_password_screen.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -215,7 +216,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               : (_photoUrl != null && _photoUrl!.isNotEmpty
                                   ? NetworkImage(_photoUrl!)
                                   : AssetImage(
-                                          'assets/images/avatar_placeholder.png')
+                                          'assets/images/avatar_placeholder.jpg')
                                       as ImageProvider),
                         ),
                       ),
@@ -333,6 +334,41 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     }
                     return null;
                   },
+                ),
+                SizedBox(height: 10),
+                // Кнопка "Сменить пароль"
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 0), // чтобы не было лишних отступов
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ChangePasswordScreen(),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          padding: EdgeInsets.symmetric(vertical: 15),
+                        ),
+                        child: Text(
+                          'Сменить пароль',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
                 SizedBox(height: 20),
                 // Переключатель скрытия аллергенных блюд
