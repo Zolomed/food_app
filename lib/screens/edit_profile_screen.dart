@@ -224,7 +224,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         bottom: 0,
                         right: 0,
                         child: IconButton(
-                          icon: Icon(Icons.camera_alt, color: Colors.white),
+                          icon: Icon(Icons.edit, color: Colors.orange),
                           onPressed: _pickAvatar,
                         ),
                       ),
