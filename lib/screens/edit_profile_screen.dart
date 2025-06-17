@@ -193,6 +193,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
+    final orangeUnderlineDecoration = InputDecoration(
+      enabledBorder: UnderlineInputBorder(
+        borderSide: BorderSide(color: Colors.grey),
+      ),
+      focusedBorder: UnderlineInputBorder(
+        borderSide: BorderSide(color: Colors.orange, width: 2),
+      ),
+      labelStyle: TextStyle(color: Colors.black),
+    );
     return Scaffold(
       appBar: AppBar(title: Text('Редактировать профиль')),
       body: Padding(
@@ -299,9 +308,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     }
                   },
                   decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                    filled: false,
+                    fillColor: Colors.white,
+                    border: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey),
                     ),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.orange, width: 2),
+                    ),
+                    labelStyle: TextStyle(color: Colors.grey),
+                    hintStyle: TextStyle(color: Colors.black),
                   ),
                   onTap: _showDeleteAddressHint,
                 ),
@@ -309,7 +328,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 // Имя пользователя
                 TextFormField(
                   controller: nameController,
-                  decoration: InputDecoration(labelText: 'Имя'),
+                  decoration:
+                      orangeUnderlineDecoration.copyWith(labelText: 'Телефон'),
                   validator: (value) =>
                       value == null || value.isEmpty ? 'Введите имя' : null,
                 ),
@@ -317,7 +337,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 // Телефон пользователя
                 TextFormField(
                   controller: phoneController,
-                  decoration: InputDecoration(labelText: 'Телефон'),
+                  decoration:
+                      orangeUnderlineDecoration.copyWith(labelText: 'Телефон'),
                   validator: (value) =>
                       value == null || value.isEmpty ? 'Введите телефон' : null,
                 ),
@@ -325,7 +346,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 // Email пользователя
                 TextFormField(
                   controller: emailController,
-                  decoration: InputDecoration(labelText: 'E-mail'),
+                  decoration:
+                      orangeUnderlineDecoration.copyWith(labelText: 'Телефон'),
                   validator: (value) {
                     if (value == null || value.isEmpty) return null;
                     final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
