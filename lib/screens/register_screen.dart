@@ -48,8 +48,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
         await credential.user?.sendEmailVerification();
 
-        // После регистрации возвращаемся на экран входа
-        Navigator.pushReplacementNamed(context, '/');
+        // Переход на страницу входа и показ всплывающего уведомления
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/');
+          Future.delayed(const Duration(milliseconds: 300), () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'На вашу почту отправлено письмо. Подтвердите аккаунт по ссылке из письма.',
+                ),
+                backgroundColor: Colors.orange,
+                behavior: SnackBarBehavior.floating,
+                duration: Duration(seconds: 5),
+              ),
+            );
+          });
+        }
       } on FirebaseAuthException catch (e) {
         if (e.code == 'weak-password') {
           setState(() {
