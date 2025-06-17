@@ -15,10 +15,15 @@ class _CartScreenState extends State<CartScreen> {
   List<Map<String, dynamic>> cartItems = [];
   bool isLoading = true;
 
+  // Для аллергий пользователя
+  List<String> userAllergies = [];
+  bool hideAllergenFoods = true;
+
   @override
   void initState() {
     super.initState();
     _loadCart(); // Загрузка корзины при инициализации экрана
+    _loadUserAllergies(); // Загрузка аллергий пользователя
   }
 
   // Получение корзины пользователя из Firestore
@@ -33,6 +38,32 @@ class _CartScreenState extends State<CartScreen> {
       cartItems = List<Map<String, dynamic>>.from(doc.data()?['cart'] ?? []);
       isLoading = false;
     });
+  }
+
+  // Загрузка аллергий пользователя и настройки скрытия аллергенных блюд
+  Future<void> _loadUserAllergies() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
+    setState(() {
+      userAllergies = List<String>.from(doc.data()?['allergies'] ?? []);
+      hideAllergenFoods = doc.data()?['hideAllergenFoods'] ?? true;
+    });
+  }
+
+  // Получение аллергенов блюда из Firestore
+  Future<List<String>> _getMenuItemAllergens(
+      String restaurantId, String menuItemId) async {
+    final menuDoc = await FirebaseFirestore.instance
+        .collection('restaurants')
+        .doc(restaurantId)
+        .collection('menu')
+        .doc(menuItemId)
+        .get();
+    return List<String>.from(menuDoc.data()?['allergens'] ?? []);
   }
 
   // Подсчёт общего количества блюд в корзине
@@ -167,86 +198,120 @@ class _CartScreenState extends State<CartScreen> {
                   separatorBuilder: (_, __) => Divider(height: 32),
                   itemBuilder: (context, index) {
                     final item = cartItems[index];
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        // Картинка блюда
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: item['image'] != null &&
-                                  item['image'].toString().startsWith('http')
-                              ? Image.network(
-                                  item['image'],
-                                  width: 90,
-                                  height: 90,
-                                  fit: BoxFit.contain,
-                                )
-                              : Image.asset(
-                                  item['image'] ?? '',
-                                  width: 90,
-                                  height: 90,
-                                  fit: BoxFit.contain,
-                                ),
-                        ),
-                        SizedBox(width: 14),
-                        // Название и параметры блюда
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item['name'],
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                    return FutureBuilder<List<String>>(
+                      future: _getMenuItemAllergens(
+                          item['restaurantId'], item['menuItemId']),
+                      builder: (context, snapshot) {
+                        final allergens = snapshot.data ?? [];
+                        final containsAllergen =
+                            allergens.any((a) => userAllergies.contains(a));
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // Картинка блюда
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: item['image'] != null &&
+                                      item['image']
+                                          .toString()
+                                          .startsWith('http')
+                                  ? Image.network(
+                                      item['image'],
+                                      width: 90,
+                                      height: 90,
+                                      fit: BoxFit.contain,
+                                    )
+                                  : Image.asset(
+                                      item['image'] ?? '',
+                                      width: 90,
+                                      height: 90,
+                                      fit: BoxFit.contain,
+                                    ),
+                            ),
+                            SizedBox(width: 14),
+                            // Название и параметры блюда
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item['name'],
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  // --- Предупреждение об аллергенах ---
+                                  if (!hideAllergenFoods && containsAllergen)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 2.0),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.warning,
+                                              color: Colors.red, size: 16),
+                                          SizedBox(width: 4),
+                                          Expanded(
+                                            child: Text(
+                                              'Содержит ваш аллерген',
+                                              style: TextStyle(
+                                                  color: Colors.red,
+                                                  fontSize: 12),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  SizedBox(height: 6),
+                                  Text(
+                                    '${item['price'].toStringAsFixed(2)}₽ · ${item['weight'] ?? ''} г',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      color: Colors.grey[700],
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              SizedBox(height: 6),
-                              Text(
-                                '${item['price'].toStringAsFixed(2)}₽ · ${item['weight'] ?? ''} г',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  color: Colors.grey[700],
-                                  fontWeight: FontWeight.w400,
-                                ),
+                            ),
+                            SizedBox(width: 10),
+                            // Кнопки для изменения количества блюда
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                borderRadius: BorderRadius.circular(18),
                               ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        // Кнопки для изменения количества блюда
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          child: Row(
-                            children: [
-                              IconButton(
-                                icon: Icon(Icons.remove, color: Colors.black),
-                                onPressed: () async {
-                                  await decreaseFromCart(item);
-                                },
+                              child: Row(
+                                children: [
+                                  IconButton(
+                                    icon:
+                                        Icon(Icons.remove, color: Colors.black),
+                                    onPressed: () async {
+                                      await decreaseFromCart(item);
+                                    },
+                                  ),
+                                  Text(
+                                    '${item['quantity']}',
+                                    style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.add, color: Colors.black),
+                                    onPressed: totalCount >= 30
+                                        ? null
+                                        : () async {
+                                            await addToCart(item);
+                                          },
+                                  ),
+                                ],
                               ),
-                              Text(
-                                '${item['quantity']}',
-                                style: TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.w500),
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.add, color: Colors.black),
-                                onPressed: totalCount >= 30
-                                    ? null
-                                    : () async {
-                                        await addToCart(item);
-                                      },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                            ),
+                          ],
+                        );
+                      },
                     );
                   },
                 ),

@@ -4,8 +4,6 @@ import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:food_app/models/app_user.dart';
 
-//TODO сделать проверку на русский в пароле
-
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
