@@ -42,24 +42,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
           phone: phoneController.text.trim(),
         );
 
-        await db.collection('users').doc(user.uid).set(user.toMap());
+        // Добавляем showAllergyPrompt для показа предложения при первом входе
+        await db.collection('users').doc(user.uid).set({
+          ...user.toMap(),
+          'showAllergyPrompt': true,
+        });
 
         await credential.user?.sendEmailVerification();
 
-        Navigator.pushReplacementNamed(
-          context,
-          '/',
-          arguments: {'email': emailController.text.trim()},
-        );
-        Future.delayed(Duration(milliseconds: 300), () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Письмо для подтверждения отправлено на ${credential.user?.email}. Подтвердите email и войдите.',
-              ),
-            ),
-          );
-        });
+        // После регистрации возвращаемся на экран входа
+        Navigator.pushReplacementNamed(context, '/');
       } on FirebaseAuthException catch (e) {
         if (e.code == 'weak-password') {
           setState(() {
