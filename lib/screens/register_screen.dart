@@ -50,7 +50,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
         // Переход на страницу входа и показ всплывающего уведомления
         if (mounted) {
-          Navigator.pushReplacementNamed(context, '/');
+          Navigator.pushReplacementNamed(
+            context,
+            '/',
+            arguments: {'email': emailController.text.trim()},
+          );
           Future.delayed(const Duration(milliseconds: 300), () {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

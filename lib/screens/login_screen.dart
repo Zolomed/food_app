@@ -22,6 +22,19 @@ class _LoginScreenState extends State<LoginScreen> {
     final args = ModalRoute.of(context)?.settings.arguments;
     if (args is Map && args['email'] != null) {
       emailController.text = args['email'];
+      // Показываем уведомление, если email пришёл после регистрации
+      Future.delayed(const Duration(milliseconds: 300), () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'На вашу почту отправлено письмо. Подтвердите аккаунт по ссылке из письма.',
+            ),
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 5),
+          ),
+        );
+      });
     }
   }
 
