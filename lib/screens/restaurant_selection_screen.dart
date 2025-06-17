@@ -184,7 +184,6 @@ class _RestaurantSelectionScreenState extends State<RestaurantSelectionScreen> {
       },
     );
   }
-  // --- конец нового кода ---
 
   @override
   Widget build(BuildContext context) {
@@ -210,6 +209,15 @@ class _RestaurantSelectionScreenState extends State<RestaurantSelectionScreen> {
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(18),
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  borderSide: BorderSide(color: Colors.orange, width: 2),
                 ),
                 contentPadding:
                     EdgeInsets.symmetric(vertical: 0, horizontal: 16),

@@ -91,16 +91,12 @@ class FoodCard extends StatelessWidget {
                             child: GestureDetector(
                               onTap: onFavoriteTap,
                               child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.85),
-                                  shape: BoxShape.circle,
-                                ),
                                 padding: const EdgeInsets.all(4),
                                 child: Icon(
                                   isFavorite
                                       ? Icons.favorite
                                       : Icons.favorite_border,
-                                  color: isFavorite ? Colors.red : Colors.grey,
+                                  color: isFavorite ? Colors.red : Colors.white,
                                   size: 22,
                                 ),
                               ),
