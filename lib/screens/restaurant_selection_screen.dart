@@ -23,6 +23,7 @@ class _RestaurantSelectionScreenState extends State<RestaurantSelectionScreen> {
     super.initState();
     _futureRestaurants = fetchRestaurants();
     _loadFavoriteRestaurants();
+    _checkShowAllergyPrompt();
   }
 
   // Получение списка ресторанов с меню из Firestore
@@ -70,6 +71,120 @@ class _RestaurantSelectionScreenState extends State<RestaurantSelectionScreen> {
     await docRef.update({'favoriteRestaurants': favoriteRestaurants});
     await _loadFavoriteRestaurants();
   }
+
+  // Предложение о выборе аллергий при первом входе
+  Future<void> _checkShowAllergyPrompt() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
+    if (doc.data()?['showAllergyPrompt'] == true) {
+      Future.delayed(Duration.zero, () => _showAllergyPromptDialog());
+    }
+  }
+
+  void _showAllergyPromptDialog() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    List<String> allAllergies = [];
+    final snapshot =
+        await FirebaseFirestore.instance.collection('allergies').get();
+    allAllergies = snapshot.docs.map((doc) => doc['name'] as String).toList();
+
+    List<String> selectedAllergies = [];
+    bool hideAllergenFoods = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setState) => AlertDialog(
+            title: Text('Впервые здесь?'),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Хотите указать ваши аллергии? Это поможет скрывать блюда с аллергенами или показывать предупреждение.Если что, это всегда можно будет изменить в настройках.',
+                  ),
+                  SizedBox(height: 16),
+                  Text('Выберите аллергии:',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  ...allAllergies.map((allergy) => CheckboxListTile(
+                        title: Text(allergy),
+                        value: selectedAllergies.contains(allergy),
+                        onChanged: (val) {
+                          setState(() {
+                            if (val == true) {
+                              selectedAllergies.add(allergy);
+                            } else {
+                              selectedAllergies.remove(allergy);
+                            }
+                          });
+                        },
+                      )),
+                  Divider(),
+                  SwitchListTile(
+                    title: Text('Скрывать блюда с аллергенами'),
+                    value: hideAllergenFoods,
+                    onChanged: (val) {
+                      setState(() {
+                        hideAllergenFoods = val;
+                      });
+                    },
+                  ),
+                  if (!hideAllergenFoods)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        'Если не скрывать, будет отображаться предупреждение на блюдах с вашими аллергенами.',
+                        style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  // Сохраняем выбор пользователя
+                  await FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(user.uid)
+                      .update({
+                    'allergies': selectedAllergies,
+                    'hideAllergenFoods': hideAllergenFoods,
+                    'showAllergyPrompt': false,
+                  });
+                  Navigator.of(ctx).pop();
+                  setState(() {}); // обновить экран
+                },
+                child: Text('Сохранить'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  // Просто скрываем предложение
+                  await FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(user.uid)
+                      .update({
+                    'showAllergyPrompt': false,
+                  });
+                  Navigator.of(ctx).pop();
+                },
+                child: Text('Пропустить'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+  // --- конец нового кода ---
 
   @override
   Widget build(BuildContext context) {
