@@ -244,7 +244,7 @@ class _CartScreenState extends State<CartScreen> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   // --- Предупреждение об аллергенах ---
-                                  if (!hideAllergenFoods && containsAllergen)
+                                  if (containsAllergen)
                                     Padding(
                                       padding: const EdgeInsets.only(top: 2.0),
                                       child: Row(
